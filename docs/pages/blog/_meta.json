@@ -1,0 +1,9 @@
+{
+  "hello-blog": {
+    "title": "Hello",
+    "type": "page",
+    "theme": {
+      "sidebar": false
+    }
+  }
+}
