@@ -1,0 +1,28 @@
+# 4337 基础合约
+
+## EntryPoint
+
+EntryPoint为UserOperation交易的统一入口
+
+- 提供批量发起UserOperation交易
+- 提供聚合签名发起UserOperatin交易
+- 提供UserOperation交易的模拟
+
+## UserWallet
+
+用户在链上部署的合约钱包
+
+- 合约内部维护了owner列表
+- 合约内部维护了nonce
+- 直接call或者批量call其他合约交易
+- 提供社交恢复接口
+
+## Paymaster
+
+Paymaster（可选）用作替代用户去使用gas的规则，
+
+- 可选gasless，
+- 可选usdt支付gas，
+- 可选其他ERC20代币支付gas
+
+

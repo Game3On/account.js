@@ -1,6 +1,13 @@
 {
-  "hello-blog": {
-    "title": "Hello",
+  "0-blog": {
+    "title": "Hello GameOn",
+    "type": "page",
+    "theme": {
+      "sidebar": false
+    }
+  },
+  "1-updates": {
+    "title": "EIP4337 Updates",
     "type": "page",
     "theme": {
       "sidebar": false

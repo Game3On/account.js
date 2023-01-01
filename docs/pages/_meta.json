@@ -4,8 +4,16 @@
     "type": "page",
     "display": "hidden"
   },
+  "documents": {
+    "title": "Documents",
+    "type": "page"
+  },
   "blog": {
     "title": "Blog",
+    "type": "page"
+  },
+  "about": {
+    "title": "About",
     "type": "page"
   }
 }

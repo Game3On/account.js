@@ -1,0 +1,9 @@
+{
+  "about-us": {
+    "title": "About",
+    "type": "page",
+    "theme": {
+      "sidebar": false
+    }
+  }
+}

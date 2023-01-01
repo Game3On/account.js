@@ -11,9 +11,9 @@ export const BlogIndex = ({ more = 'Read more' }) => {
     ) => {
       return (
         <>
-          <h1 className="text-center font-extrabold text-3xl mb-10 md:text-5xl mt-10 md:mb-14">
+          {/* <h1 className="text-center font-extrabold text-3xl mb-10 md:text-5xl mt-10 md:mb-14">
             Game-On Blog
-          </h1>
+          </h1> */}
 
           <div className="">
             <h3 className="text-2xl font-bold mb-4">
