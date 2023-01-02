@@ -8,9 +8,6 @@
   "2-1-contracts": "4337 Contracts",
   "2-2-modules": "GameOn Modules",
   "2-3-features": "Features",
-  "---": {
-    "type": "separator"
-  },
   "3-1-tutorial": "Tutorial",
   "4-1-demos": "Demos"
 }
