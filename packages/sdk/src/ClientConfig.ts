@@ -1,17 +1,9 @@
 import { PaymasterAPI } from './PaymasterAPI'
 
-/**
- * configuration params for wrapProvider
- */
 export interface ClientConfig {
-  /**
-   * the entry point to use
-   */
   entryPointAddress: string
-  /**
-   * url to the bundler
-   */
   bundlerUrl: string
+  chainId: number
   /**
    * if set, use this pre-deployed wallet.
    * (if not set, use getSigner().getAddress() to query the "counterfactual" address of wallet.
