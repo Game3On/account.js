@@ -1,7 +1,6 @@
 {
-  "name": "unnamed",
+  "name": "sdk",
   "description": "Official sdk of Game-On AA module",
-  "license": "MIT",
   "version": "0.0.1",
   "repository": {
     "type": "git",
