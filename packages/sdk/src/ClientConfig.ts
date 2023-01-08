@@ -10,8 +10,5 @@ export interface ClientConfig {
    *  you may need to fund this address so the wallet can pay for its own creation)
    */
   walletAddres?: string
-  /**
-   * if set, call just before signing.
-   */
   paymasterAPI?: PaymasterAPI
 }

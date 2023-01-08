@@ -4,18 +4,17 @@ import { Network } from '@ethersproject/networks'
 // import { hexValue, resolveProperties } from 'ethers/lib/utils'
 
 import { ClientConfig } from './ClientConfig'
+import { HttpRpcClient } from './HttpRpcClient'
 import { ERC4337EthersSigner } from './ERC4337EthersSigner'
 // import { UserOperationEventListener } from './UserOperationEventListener'
-// import { HttpRpcClient } from './HttpRpcClient'
-// import { EntryPoint, UserOperationStruct } from '@account-abstraction/contracts'
-// import { getUserOpHash } from '@account-abstraction/utils'
-// import { BaseAccountAPI } from './BaseWalletAPI'
+
+import { EntryPoint, UserOperationStruct } from '@account-abstraction/contracts' // SKYH: change to generalize contracts
+import { getUserOpHash } from '@account-abstraction/utils'
+import { BaseAccountAPI } from './BaseWalletAPI'
 // import Debug from 'debug'
 // const debug = Debug('aa.provider')
 
 export class ERC4337EthersProvider extends BaseProvider {
-  // initializedBlockNumber!: number
-
   readonly signer: ERC4337EthersSigner
 
   constructor (
@@ -33,17 +32,16 @@ export class ERC4337EthersProvider extends BaseProvider {
     this.signer = new ERC4337EthersSigner(config, originalSigner, this, httpRpcClient, smartAccountAPI)
   }
 
-  // async init (): Promise<this> {
-  //   // await this.httpRpcClient.validateChainId()
-  //   // this.initializedBlockNumber = await this.originalProvider.getBlockNumber()
-  //   await this.smartAccountAPI.init()
-  //   // await this.signer.init()
-  //   return this
-  // }
+  async init (): Promise<this> {
+    // await this.httpRpcClient.validateChainId()
+    // await this.smartAccountAPI.init()
+    // await this.signer.init()
+    return this
+  }
 
-  // getSigner (): ERC4337EthersSigner {
-  //   return this.signer
-  // }
+  async getSenderAccountAddress (): Promise<string> {
+    return await this.smartAccountAPI.getAccountAddress()
+  }
 
   // async perform (method: string, params: any): Promise<any> {
   //   debug('perform', method, params)
@@ -70,9 +68,7 @@ export class ERC4337EthersProvider extends BaseProvider {
   //   })
   // }
 
-  // async getSenderAccountAddress (): Promise<string> {
-  //   return await this.smartAccountAPI.getAccountAddress()
-  // }
+  
 
   // async waitForTransaction (transactionHash: string, confirmations?: number, timeout?: number): Promise<TransactionReceipt> {
   //   const sender = await this.getSenderAccountAddress()
@@ -114,5 +110,9 @@ export class ERC4337EthersProvider extends BaseProvider {
 
   // async detectNetwork (): Promise<Network> {
   //   return (this.originalProvider as any).detectNetwork()
+  // }
+
+  // getSigner (): ERC4337EthersSigner {
+  //   return this.signer
   // }
 }

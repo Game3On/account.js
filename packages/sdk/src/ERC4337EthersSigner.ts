@@ -23,6 +23,13 @@ export class ERC4337EthersSigner extends Signer {
 
   address?: string
 
+  async getAddress (): Promise<string> {
+    if (this.address == null) {
+      this.address = await this.erc4337provider.getSenderAccountAddress()
+    }
+    return this.address
+  }
+
   // // This one is called by Contract. It signs the request and passes in to Provider to be sent.
   // async sendTransaction (transaction: Deferrable<TransactionRequest>): Promise<TransactionResponse> {
   //   const tx: TransactionRequest = await this.populateTransaction(transaction)
@@ -80,12 +87,7 @@ export class ERC4337EthersSigner extends Signer {
   //   throw new Error('changing providers is not supported')
   // }
 
-  // async getAddress (): Promise<string> {
-  //   if (this.address == null) {
-  //     this.address = await this.erc4337provider.getSenderAccountAddress()
-  //   }
-  //   return this.address
-  // }
+  
 
   // async signMessage (message: Bytes | string): Promise<string> {
   //   return await this.originalSigner.signMessage(message)
