@@ -23,6 +23,15 @@ export class ERC4337EthersSigner extends Signer {
 
   address?: string
 
+  connect (provider: Provider): Signer {
+    throw new Error('changing providers is not supported')
+  }
+
+  async signTransaction (transaction: Deferrable<TransactionRequest>): Promise<string> {
+    console.log(transaction);
+    throw new Error('not implemented')
+  }
+
   async getAddress (): Promise<string> {
     if (this.address == null) {
       this.address = await this.erc4337provider.getSenderAccountAddress()
@@ -30,76 +39,66 @@ export class ERC4337EthersSigner extends Signer {
     return this.address
   }
 
-  // // This one is called by Contract. It signs the request and passes in to Provider to be sent.
-  // async sendTransaction (transaction: Deferrable<TransactionRequest>): Promise<TransactionResponse> {
-  //   const tx: TransactionRequest = await this.populateTransaction(transaction)
-  //   await this.verifyAllNecessaryFields(tx)
-  //   const userOperation = await this.smartAccountAPI.createSignedUserOp({
-  //     target: tx.to ?? '',
-  //     data: tx.data?.toString() ?? '',
-  //     value: tx.value,
-  //     gasLimit: tx.gasLimit
-  //   })
-  //   console.log('signed userOp ', userOperation)
-  //   const transactionResponse = await this.erc4337provider.constructUserOpTransactionResponse(userOperation)
-  //   try {
-  //     await this.httpRpcClient.sendUserOpToBundler(userOperation)
-  //   } catch (error: any) {
-  //     // console.error('sendUserOpToBundler failed', error)
-  //     throw this.unwrapError(error)
-  //   }
-  //   // TODO: handle errors - transaction that is "rejected" by bundler is _not likely_ to ever resolve its "wait()"
-  //   return transactionResponse
-  // }
+  async signMessage (message: Bytes | string): Promise<string> {
+    return await this.originalSigner.signMessage(message)
+  }
 
-  // unwrapError (errorIn: any): Error {
-  //   if (errorIn.body != null) {
-  //     const errorBody = JSON.parse(errorIn.body)
-  //     let paymasterInfo: string = ''
-  //     let failedOpMessage: string | undefined = errorBody?.error?.message
-  //     if (failedOpMessage?.includes('FailedOp') === true) {
-  //       // TODO: better error extraction methods will be needed
-  //       const matched = failedOpMessage.match(/FailedOp\((.*)\)/)
-  //       if (matched != null) {
-  //         const split = matched[1].split(',')
-  //         paymasterInfo = `(paymaster address: ${split[1]})`
-  //         failedOpMessage = split[2]
-  //       }
-  //     }
-  //     const error = new Error(`The bundler has failed to include UserOperation in a batch: ${failedOpMessage} ${paymasterInfo})`)
-  //     error.stack = errorIn.stack
-  //     return error
-  //   }
-  //   return errorIn
-  // }
+  async signUserOperation (userOperation: UserOperation): Promise<string> {
+    const message = await this.smartAccountAPI.getRequestId(userOperation)
+    return await this.originalSigner.signMessage(message)
+  }
 
-  // async verifyAllNecessaryFields (transactionRequest: TransactionRequest): Promise<void> {
-  //   if (transactionRequest.to == null) {
-  //     throw new Error('Missing call target')
-  //   }
-  //   if (transactionRequest.data == null && transactionRequest.value == null) {
-  //     // TBD: banning no-op UserOps seems to make sense on provider level
-  //     throw new Error('Missing call data or value')
-  //   }
-  // }
+  // This one is called by Contract. It signs the request and passes in to Provider to be sent.
+  async sendTransaction (transaction: Deferrable<TransactionRequest>): Promise<TransactionResponse> {
+    const tx: TransactionRequest = await this.populateTransaction(transaction)
+    await this.verifyAllNecessaryFields(tx)
+    const userOperation = await this.smartAccountAPI.createSignedUserOp({
+      target: tx.to ?? '',
+      data: tx.data?.toString() ?? '',
+      value: tx.value,
+      gasLimit: tx.gasLimit
+    })
+    console.log('signed userOp ', userOperation)
+    const transactionResponse = await this.erc4337provider.constructUserOpTransactionResponse(userOperation)
+    try {
+      await this.httpRpcClient.sendUserOpToBundler(userOperation)
+    } catch (error: any) {
+      // console.error('sendUserOpToBundler failed', error)
+      throw this.unwrapError(error)
+    }
+    // TODO: handle errors - transaction that is "rejected" by bundler is _not likely_ to ever resolve its "wait()"
+    return transactionResponse
+  }
 
-  // connect (provider: Provider): Signer {
-  //   throw new Error('changing providers is not supported')
-  // }
+  async verifyAllNecessaryFields (transactionRequest: TransactionRequest): Promise<void> {
+    if (transactionRequest.to == null) {
+      throw new Error('Missing call target')
+    }
+    if (transactionRequest.data == null && transactionRequest.value == null) {
+      // TBD: banning no-op UserOps seems to make sense on provider level
+      throw new Error('Missing call data or value')
+    }
+  }
 
-  
+  unwrapError (errorIn: any): Error {
+    if (errorIn.body != null) {
+      const errorBody = JSON.parse(errorIn.body)
+      let paymasterInfo: string = ''
+      let failedOpMessage: string | undefined = errorBody?.error?.message
+      if (failedOpMessage?.includes('FailedOp') === true) {
+        // TODO: better error extraction methods will be needed
+        const matched = failedOpMessage.match(/FailedOp\((.*)\)/)
+        if (matched != null) {
+          const split = matched[1].split(',')
+          paymasterInfo = `(paymaster address: ${split[1]})`
+          failedOpMessage = split[2]
+        }
+      }
+      const error = new Error(`The bundler has failed to include UserOperation in a batch: ${failedOpMessage} ${paymasterInfo})`)
+      error.stack = errorIn.stack
+      return error
+    }
+    return errorIn
+  }
 
-  // async signMessage (message: Bytes | string): Promise<string> {
-  //   return await this.originalSigner.signMessage(message)
-  // }
-
-  // async signTransaction (transaction: Deferrable<TransactionRequest>): Promise<string> {
-  //   console.log(transaction);
-  //   throw new Error('not implemented')
-  // }
-
-  // async signUserOperation (userOperation: UserOperation): Promise<string> {
-  //   const message = await this.smartAccountAPI.getRequestId(userOperation)
-  //   return await this.originalSigner.signMessage(message)
-  // }
 }

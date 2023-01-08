@@ -8,11 +8,10 @@ import { HttpRpcClient } from './HttpRpcClient'
 import { ERC4337EthersSigner } from './ERC4337EthersSigner'
 // import { UserOperationEventListener } from './UserOperationEventListener'
 
-import { EntryPoint, UserOperationStruct } from '@account-abstraction/contracts' // SKYH: change to generalize contracts
+// SKYH: change to generalize contracts
+// import { EntryPoint, UserOperationStruct } from '@account-abstraction/contracts' 
 import { getUserOpHash } from '@account-abstraction/utils'
-import { BaseAccountAPI } from './BaseWalletAPI'
-// import Debug from 'debug'
-// const debug = Debug('aa.provider')
+import { BaseAccountAPI } from './BaseAccountAPI'
 
 export class ERC4337EthersProvider extends BaseProvider {
   readonly signer: ERC4337EthersSigner
