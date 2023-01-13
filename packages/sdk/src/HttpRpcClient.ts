@@ -5,8 +5,6 @@ import { resolveProperties } from 'ethers/lib/utils'
 import { UserOperationStruct } from '@account-abstraction/contracts'
 import { deepHexlify } from '@account-abstraction/utils'
 
-const debug = Debug('aa.rpc')
-
 export class HttpRpcClient {
   private readonly userOpJsonRpcProvider: JsonRpcProvider
 
