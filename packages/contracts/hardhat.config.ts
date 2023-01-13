@@ -7,8 +7,9 @@ import '@nomiclabs/hardhat-etherscan'
 import 'solidity-coverage'
 
 import * as fs from 'fs'
+require('dotenv').config()
 
-const mnemonicFileName = process.env.MNEMONIC_FILE ?? `${process.env.HOME}/.secret/testnet-mnemonic.txt`
+const mnemonicFileName: any = process.env.MNEMONIC_FILE 
 let mnemonic = 'test '.repeat(11) + 'junk'
 if (fs.existsSync(mnemonicFileName)) { mnemonic = fs.readFileSync(mnemonicFileName, 'ascii') }
 
