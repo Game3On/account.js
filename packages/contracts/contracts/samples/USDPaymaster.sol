@@ -33,6 +33,7 @@ contract USDPaymaster is BasePaymaster {
     constructor(address accountFactory, IEntryPoint _entryPoint, IERC20 _usdToken, IOracle _oracle) BasePaymaster(_entryPoint) {
         theFactory = accountFactory;
         usdToken = _usdToken;
+        oracle = _oracle;
     }
 
     /**
@@ -53,18 +54,18 @@ contract USDPaymaster is BasePaymaster {
       */
     function validatePaymasterUserOp(UserOperation calldata userOp, bytes32 /*userOpHash*/, uint256 requiredPreFund)
     external view override returns (bytes memory context, uint256 deadline) {
-        uint256 tokenPrefund = getTokenValueOfEth(requiredPreFund);
+        uint256 tokenPrefund = oracle.getTokenValueOfEth(requiredPreFund);
 
         // verificationGasLimit is dual-purposed, as gas limit for postOp. make sure it is high enough
         // make sure that verificationGasLimit is high enough to handle postOp
-        require(userOp.verificationGasLimit > COST_OF_POST, "TokenPaymaster: gas too low for postOp");
+        require(userOp.verificationGasLimit > COST_OF_POST, "USDPaymaster: gas too low for postOp");
 
         if (userOp.initCode.length != 0) {
             _validateConstructor(userOp);
-            require(balanceOf(userOp.sender) >= tokenPrefund, "TokenPaymaster: no balance (pre-create)");
+            require(usdToken.balanceOf(userOp.sender) >= tokenPrefund, "USDPaymaster: no balance (pre-create)");
         } else {
-
-            require(balanceOf(userOp.sender) >= tokenPrefund, "TokenPaymaster: no balance");
+            require(usdToken.balanceOf(userOp.sender) >= tokenPrefund, "USDPaymaster: no balance");
+            require(usdToken.allowance(userOp.sender, address(this)) >= tokenPrefund, "USDPaymaster: no allowance");
         }
 
         return (abi.encode(userOp.sender), 0);
@@ -74,7 +75,9 @@ contract USDPaymaster is BasePaymaster {
     // we trust our factory (and that it doesn't have any other public methods)
     function _validateConstructor(UserOperation calldata userOp) internal virtual view {
         address factory = address(bytes20(userOp.initCode[0 : 20]));
-        require(factory == theFactory, "TokenPaymaster: wrong account factory");
+        require(factory == theFactory, "USDPaymaster: wrong account factory");
+
+        // TODO: check constructor parameters
     }
 
     /**
@@ -88,8 +91,9 @@ contract USDPaymaster is BasePaymaster {
         //we don't really care about the mode, we just pay the gas with the user's tokens.
         (mode);
         address sender = abi.decode(context, (address));
-        uint256 charge = getTokenValueOfEth(actualGasCost + COST_OF_POST);
+        uint256 charge = oracle.getTokenValueOfEth(actualGasCost + COST_OF_POST);
         //actualGasCost is known to be no larger than the above requiredPreFund, so the transfer should succeed.
-        _transfer(sender, address(this), charge);
+        usdToken.transferFrom(sender, address(this), charge);
+
     }
 }

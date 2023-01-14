@@ -8,16 +8,7 @@ import "./SimpleAccount.sol";
 import "../core/BasePaymaster.sol";
 
 /**
- * A sample paymaster that define itself as a token to pay for gas.
- * The paymaster IS the token to use, since a paymaster cannot use an external contract.
- * Also, the exchange rate has to be fixed, since it can't reference an external Uniswap or other exchange contract.
- * subclass should override "getTokenValueOfEth to provide actual token exchange rate, settable by the owner.
- * Known Limitation: this paymaster is exploitable when put into a batch with multiple ops (of different accounts):
- * - while a single op can't exploit the paymaster (if postOp fails to withdraw the tokens, the user's op is reverted,
- *   and then we know we can withdraw the tokens), multiple ops with different senders (all using this paymaster)
- *   in a batch can withdraw funds from 2nd and further ops, forcing the paymaster itself to pay (from its deposit)
- * - Possible workarounds are either use a more complex paymaster scheme (e.g. the DepositPaymaster) or
- *   to whitelist the account and the called method ids.
+ * paymaster that accepts WETH.
  */
 contract WETHPaymaster is BasePaymaster {
 
@@ -54,14 +45,14 @@ contract WETHPaymaster is BasePaymaster {
 
         // verificationGasLimit is dual-purposed, as gas limit for postOp. make sure it is high enough
         // make sure that verificationGasLimit is high enough to handle postOp
-        require(userOp.verificationGasLimit > COST_OF_POST, "TokenPaymaster: gas too low for postOp");
+        require(userOp.verificationGasLimit > COST_OF_POST, "WETHPaymaster: gas too low for postOp");
 
         if (userOp.initCode.length != 0) {
             _validateConstructor(userOp);
-            require(balanceOf(userOp.sender) >= tokenPrefund, "TokenPaymaster: no balance (pre-create)");
+            require(wethToken.balanceOf(userOp.sender) >= tokenPrefund, "WETHPaymaster: no balance (pre-create)");
         } else {
-
-            require(balanceOf(userOp.sender) >= tokenPrefund, "TokenPaymaster: no balance");
+            require(wethToken.balanceOf(userOp.sender) >= tokenPrefund, "WETHPaymaster: no balance");
+            require(wethToken.allowance(userOp.sender, address(this)) >= tokenPrefund, "WETHPaymaster: no allowance");
         }
 
         return (abi.encode(userOp.sender), 0);
@@ -71,7 +62,9 @@ contract WETHPaymaster is BasePaymaster {
     // we trust our factory (and that it doesn't have any other public methods)
     function _validateConstructor(UserOperation calldata userOp) internal virtual view {
         address factory = address(bytes20(userOp.initCode[0 : 20]));
-        require(factory == theFactory, "TokenPaymaster: wrong account factory");
+        require(factory == theFactory, "WETHPaymaster: wrong account factory");
+
+        // TODO: check constructor parameters
     }
 
     /**
@@ -85,8 +78,6 @@ contract WETHPaymaster is BasePaymaster {
         //we don't really care about the mode, we just pay the gas with the user's tokens.
         (mode);
         address sender = abi.decode(context, (address));
-        uint256 charge = getTokenValueOfEth(actualGasCost + COST_OF_POST);
-        //actualGasCost is known to be no larger than the above requiredPreFund, so the transfer should succeed.
-        _transfer(sender, address(this), charge);
+        wethToken.transferFrom(sender, address(this), actualGasCost + COST_OF_POST);
     }
 }
