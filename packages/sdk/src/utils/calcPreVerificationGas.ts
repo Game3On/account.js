@@ -1,4 +1,4 @@
-// import { UserOperationStruct } from '@account-abstraction/contracts'
+import { UserOperationStruct } from '@account-abstraction/contracts'
 import { NotPromise, packUserOp } from '@account-abstraction/utils'
 import { arrayify, hexlify } from 'ethers/lib/utils'
 

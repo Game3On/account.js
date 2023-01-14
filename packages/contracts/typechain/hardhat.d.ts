@@ -221,6 +221,26 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.DepositPaymaster__factory>;
     getContractFactory(
+      name: "GameFixedPaymaster",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.GameFixedPaymaster__factory>;
+    getContractFactory(
+      name: "VerifyingPaymaster",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.VerifyingPaymaster__factory>;
+    getContractFactory(
+      name: "IOracle",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IOracle__factory>;
+    getContractFactory(
+      name: "DecimalOracle",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.DecimalOracle__factory>;
+    getContractFactory(
+      name: "FixedOracle",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.FixedOracle__factory>;
+    getContractFactory(
       name: "IOracle",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IOracle__factory>;
@@ -236,6 +256,10 @@ declare module "hardhat/types/runtime" {
       name: "SimpleAccountForTokens",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.SimpleAccountForTokens__factory>;
+    getContractFactory(
+      name: "SimpleTokenAccount",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.SimpleTokenAccount__factory>;
     getContractFactory(
       name: "TestAggregatedAccount",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -253,9 +277,17 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.TokenPaymaster__factory>;
     getContractFactory(
+      name: "USDPaymaster",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.USDPaymaster__factory>;
+    getContractFactory(
       name: "VerifyingPaymaster",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.VerifyingPaymaster__factory>;
+    getContractFactory(
+      name: "WETHPaymaster",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.WETHPaymaster__factory>;
     getContractFactory(
       name: "TestCounter",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -546,6 +578,31 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.DepositPaymaster>;
     getContractAt(
+      name: "GameFixedPaymaster",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.GameFixedPaymaster>;
+    getContractAt(
+      name: "VerifyingPaymaster",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.VerifyingPaymaster>;
+    getContractAt(
+      name: "IOracle",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IOracle>;
+    getContractAt(
+      name: "DecimalOracle",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.DecimalOracle>;
+    getContractAt(
+      name: "FixedOracle",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.FixedOracle>;
+    getContractAt(
       name: "IOracle",
       address: string,
       signer?: ethers.Signer
@@ -565,6 +622,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.SimpleAccountForTokens>;
+    getContractAt(
+      name: "SimpleTokenAccount",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.SimpleTokenAccount>;
     getContractAt(
       name: "TestAggregatedAccount",
       address: string,
@@ -586,10 +648,20 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.TokenPaymaster>;
     getContractAt(
+      name: "USDPaymaster",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.USDPaymaster>;
+    getContractAt(
       name: "VerifyingPaymaster",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.VerifyingPaymaster>;
+    getContractAt(
+      name: "WETHPaymaster",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.WETHPaymaster>;
     getContractAt(
       name: "TestCounter",
       address: string,

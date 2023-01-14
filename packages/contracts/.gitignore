@@ -3,6 +3,7 @@ local
 artifacts
 cache
 node_modules
+typechain
 package-lock.json
 testnet-mnemonic.txt
 .env
