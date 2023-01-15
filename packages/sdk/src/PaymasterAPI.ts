@@ -10,7 +10,9 @@ export class PaymasterAPI {
    *  paymasterAndData value, which will only be returned by this method..
    * @returns the value to put into the PaymasterAndData, undefined to leave it empty
    */
-  async getPaymasterAndData (userOp: Partial<UserOperationStruct>): Promise<string | undefined> {
+  async getPaymasterAndData(
+    userOp: Partial<UserOperationStruct>,
+  ): Promise<string | undefined> {
     return '0x'
   }
 }
