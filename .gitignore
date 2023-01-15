@@ -43,3 +43,15 @@ tsconfig.tsbuildinfo
 .env.test.local
 .env.production.local
 .envrc
+
+typechain
+packages/bundler/src/typechain-types
+artifacts
+/packages/bundler/tsconfig.tsbuildinfo
+tsconfig.tsbuildinfo
+/packages/utils/src/types/
+/packages/bundler/typechain-types/
+/packages/bundler/deployments/
+**/dist/
+/packages/bundler/src/types/
+packages/contracts/typechain

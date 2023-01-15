@@ -9,7 +9,7 @@ import "./IBLSAccount.sol";
  * The account must maintain its own BLS public-key, and expose its trusted signature aggregator.
  * Note that unlike the "standard" SimpleAccount, this account can't be called directly
  * (normal SimpleAccount uses its "signer" address as both the ecrecover signer, and as a legitimate
- * Ethereum sender address. Obviously, a BLS public is not a valid Ethereum sender address.)
+* Ethereum sender address. Obviously, a BLS public is not a valid Ethereum sender address.)
  */
 contract BLSAccount is SimpleAccount, IBLSAccount {
     address public immutable aggregator;

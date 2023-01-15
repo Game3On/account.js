@@ -229,10 +229,6 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.VerifyingPaymaster__factory>;
     getContractFactory(
-      name: "IOracle",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IOracle__factory>;
-    getContractFactory(
       name: "DecimalOracle",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.DecimalOracle__factory>;
@@ -256,10 +252,6 @@ declare module "hardhat/types/runtime" {
       name: "SimpleAccountForTokens",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.SimpleAccountForTokens__factory>;
-    getContractFactory(
-      name: "SimpleTokenAccount",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.SimpleTokenAccount__factory>;
     getContractFactory(
       name: "TestAggregatedAccount",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -588,11 +580,6 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.VerifyingPaymaster>;
     getContractAt(
-      name: "IOracle",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IOracle>;
-    getContractAt(
       name: "DecimalOracle",
       address: string,
       signer?: ethers.Signer
@@ -622,11 +609,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.SimpleAccountForTokens>;
-    getContractAt(
-      name: "SimpleTokenAccount",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.SimpleTokenAccount>;
     getContractAt(
       name: "TestAggregatedAccount",
       address: string,
