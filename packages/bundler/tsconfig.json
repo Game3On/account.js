@@ -1,5 +1,4 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "target": "es2020",
     "module": "commonjs",
@@ -17,11 +16,12 @@
     "emitDecoratorMetadata": true,
     "sourceMap": true,
     "outDir": "dist",
-    "typeRoots": [
-      "./node_modules/@nomiclabs/hardhat-ethers"
-    ]
+    "skipLibCheck": true,
   },
   "include": [
-    "./**/*.ts"
+    "./src/**/*.ts"
+  ],
+  "exclude": [
+    "./node_modules"
   ]
 }

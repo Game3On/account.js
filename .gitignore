@@ -30,6 +30,7 @@ Temporary Items
 .eslintcache
 .next
 .pnpm-debug.log*
+yarn-error.log
 cache
 coverage
 dist
@@ -45,13 +46,29 @@ tsconfig.tsbuildinfo
 .envrc
 
 typechain
-packages/bundler/src/typechain-types
 artifacts
-/packages/bundler/tsconfig.tsbuildinfo
 tsconfig.tsbuildinfo
-/packages/utils/src/types/
+**/dist/
+**/typechain/
+testnet-mnemonic.txt
+/packages/bundler/src/typechain-types
+/packages/bundler/tsconfig.tsbuildinfo
 /packages/bundler/typechain-types/
 /packages/bundler/deployments/
-**/dist/
 /packages/bundler/src/types/
-packages/contracts/typechain
+
+/packages/utils/src/types/
+
+/packages/contracts/typechain
+/packages/contracts/deployments/dev/
+/packages/contracts/deployments/localhost/
+/packages/contracts/deployments/proxy/
+/packages/contracts/typechain-types/
+/packages/contracts/reports/gas-used-output.color
+/packages/contracts/coverage
+/packages/contracts/coverage.json
+/packages/contracts/contracts/dist/
+/packages/contracts/contracts/types/
+
+# IDEA
+/.idea/

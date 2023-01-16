@@ -5,7 +5,6 @@
   "scripts": {
     "clean": "rm -rf cache artifacts typechain typechain-types",
     "compile": "./scripts/hh-wrapper compile",
-    "tsc": "tsc",
     "lint": "yarn compile && yarn run lint:sol && yarn run lint:js ",
     "lint:js": "eslint -f unix .",
     "lint-fix": "eslint -f unix . --fix",
@@ -39,7 +38,6 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-standard": "^5.0.0",
-    "ethereum-waffle": "^3.4.0",
     "ethers": "^5.4.2",
     "hardhat": "^2.6.6",
     "solhint": "^3.3.7",
