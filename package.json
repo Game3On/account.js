@@ -6,7 +6,13 @@
     "lint": "eslint . --cache",
     "lint:fix": "pnpm lint --fix",
     "lint:format": "prettier --write",
-    "preinstall": "npx only-allow pnpm"
+    "preinstall": "npx only-allow pnpm",
+    "clear": "pnpm run clear:aa-contracts && pnpm -r --filter='./packages/*' run clear",
+    "clear:aa-contracts": "pnpm --filter='./packages/account-abstraction/contracts' run postpack",
+    "compile": "pnpm run compile:aa-contracts && pnpm -r --filter='./packages/*' run hardhat-compile",
+    "compile:aa-contracts": "pnpm --filter='./packages/account-abstraction/contracts' run prepack",
+    "tsc": "pnpm -r --filter='./packages/*' run tsc",
+    "preprocess": "pnpm run clear && pnpm run compile && pnpm run tsc"
   },
   "bugs": {
     "url": "https://github.com/Game3On/aa-lib/issues"
