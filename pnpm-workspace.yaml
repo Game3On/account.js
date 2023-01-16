@@ -2,4 +2,4 @@ link-workspace-packages: true
 packages:
   - "docs"
   - "packages/*"
-  - "packages/contracts/contracts"
+  - "packages/account-abstraction/contracts"

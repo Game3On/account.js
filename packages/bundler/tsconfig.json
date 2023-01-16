@@ -17,6 +17,10 @@
     "sourceMap": true,
     "outDir": "dist",
     "skipLibCheck": true,
+    "typeRoots": [
+      "./node_modules/@nomiclabs/hardhat-ethers",
+      "./node_modules/@types"
+    ]
   },
   "include": [
     "./src/**/*.ts"

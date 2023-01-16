@@ -1,4 +1,7 @@
 {
+  "exclude": [
+    ".eslintrc.js"
+  ],
   "compilerOptions": {
     "target": "es2020",
     "lib": [
@@ -15,7 +18,8 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "isolatedModules": false,
+    "isolatedModules": true,
+    "noEmit": true,
     "outDir": "dist",
     "declaration": true,
     "declarationMap": true,

@@ -12,7 +12,7 @@ services:
     restart: "no"
     environment:
       - HARDHAT_NETWORK=localgeth
-    command: "yarn mocha-gascalc"
+    command: "pnpm mocha-gascalc"
 
   #configuration is a copy of github/.workflows/build.xml
   localgeth:

@@ -59,16 +59,16 @@ testnet-mnemonic.txt
 
 /packages/utils/src/types/
 
-/packages/contracts/typechain
-/packages/contracts/deployments/dev/
-/packages/contracts/deployments/localhost/
-/packages/contracts/deployments/proxy/
-/packages/contracts/typechain-types/
-/packages/contracts/reports/gas-used-output.color
-/packages/contracts/coverage
-/packages/contracts/coverage.json
-/packages/contracts/contracts/dist/
-/packages/contracts/contracts/types/
+/packages/account-abstraction/typechain
+/packages/account-abstraction/deployments/dev/
+/packages/account-abstraction/deployments/localhost/
+/packages/account-abstraction/deployments/proxy/
+/packages/account-abstraction/typechain-types/
+/packages/account-abstraction/reports/gas-used-output.color
+/packages/account-abstraction/coverage
+/packages/account-abstraction/coverage.json
+/packages/account-abstraction/contracts/dist/
+/packages/account-abstraction/contracts/types/
 
 # IDEA
 /.idea/

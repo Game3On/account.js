@@ -8,7 +8,7 @@ function getClientVersion() {
 
 if [[ `getClientVersion` =~ "Geth" ]]; then
   echo Using GETH on localhost:8545
-  HARDHAT_NETWORK=dev yarn mocha-gascalc
+  HARDHAT_NETWORK=dev pnpm mocha-gascalc
 else
   echo No GETH running on localhost:8545. Using docker..
   ./scripts/docker-gascalc

@@ -7,8 +7,8 @@ if git status contracts | grep -v 'nothing to commit'|tee /dev/stderr |grep -q U
   exit 1
 fi
 
-yarn clean 
-yarn compile
+pnpm clear
+pnpm compile
 cd contracts
 
 rm -rf artifacts types dist
