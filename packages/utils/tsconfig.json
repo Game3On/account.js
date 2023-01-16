@@ -1,5 +1,4 @@
 {
-  "extends": "../../tsconfig.base.json",
   "include": [
     "./**/*.ts"
   ],
@@ -16,6 +15,7 @@
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "noImplicitThis": true,
+    "skipLibCheck": true,
     "alwaysStrict": true,
     "declaration": true,
     "experimentalDecorators": true,

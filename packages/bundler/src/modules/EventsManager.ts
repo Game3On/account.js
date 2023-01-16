@@ -1,9 +1,11 @@
-import { AccountDeployedEvent, UserOperationEventEvent } from '@aa-lib/contracts/dist/types/EntryPoint'
+import {
+  AccountDeployedEvent, UserOperationEventEvent,
+  SignatureAggregatorChangedEvent
+} from '@aa-lib/contracts/types/EntryPoint'
 import { ReputationManager } from './ReputationManager'
 import { EntryPoint } from '@aa-lib/contracts'
 import Debug from 'debug'
-import { SignatureAggregatorChangedEvent } from '@aa-lib/contracts/types/EntryPoint'
-import { TypedEvent } from '@aa-lib/contracts/dist/types/common'
+import { TypedEvent } from '@aa-lib/contracts/types/common'
 
 const debug = Debug('aa.events')
 

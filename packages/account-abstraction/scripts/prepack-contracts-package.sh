@@ -8,7 +8,7 @@ if git status contracts | grep -v 'nothing to commit'|tee /dev/stderr |grep -q U
 fi
 
 pnpm clear
-pnpm compile
+pnpm hardhat-compile
 cd contracts
 
 rm -rf artifacts types dist

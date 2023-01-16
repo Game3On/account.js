@@ -15,12 +15,12 @@ import {
 
 import { Wallet } from 'ethers'
 import { DeterministicDeployer, SimpleAccountAPI } from '@aa-lib/sdk'
-import { postExecutionDump } from '@aa-lib/utils/dist/src/postExecCheck'
+import { postExecutionDump } from '@aa-lib/utils/src/postExecCheck'
 import {
   SampleRecipient, TestRuleAccount, TestOpcodesAccount__factory
 } from '../src/types'
 import { deepHexlify } from '@aa-lib/utils'
-import { UserOperationEventEvent } from '@aa-lib/contracts/dist/types/EntryPoint'
+import { UserOperationEventEvent } from '@aa-lib/contracts/types/EntryPoint'
 import { UserOperationReceipt } from '../src/RpcTypes'
 import { ExecutionManager } from '../src/modules/ExecutionManager'
 import { BundlerReputationParams, ReputationManager } from '../src/modules/ReputationManager'
