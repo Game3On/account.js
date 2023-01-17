@@ -19,13 +19,15 @@ module.exports = {
   // This is needed to add configuration to rules with type information
   parser: '@typescript-eslint/parser',
   parserOptions: {
+    // It didn't work with docs
     project: ['./tsconfig.base.json']
   },
   ignorePatterns: [
     '.eslintrc.js',
     '**/types/truffle-contracts',
     'coverage',
-    'dist/'
+    'dist/',
+    'docs'
   ],
   rules: {
     'no-console': 'off',
