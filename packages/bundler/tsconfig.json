@@ -24,7 +24,8 @@
   ],
   "include": [
     "./test",
-    "./src"
+    "./src",
+    "./deploy",
   ],
   "files": [
     "./hardhat.config.ts"
