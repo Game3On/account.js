@@ -1,19 +1,19 @@
 {
+  "*": {
+    "type": "page"
+  },
   "index": {
     "title": "Welcome",
-    "type": "page",
     "display": "hidden"
   },
   "documents": {
-    "title": "Documents",
-    "type": "page"
+    "title": "文档"
   },
   "blog": {
-    "title": "Blog",
-    "type": "page"
+    "title": "博客",
+    "display": "hidden"
   },
   "about": {
-    "title": "About",
-    "type": "page"
+    "title": "关于"
   }
 }

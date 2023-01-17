@@ -1,13 +1,13 @@
 {
-  "1-1-problems": "Wallet Problems",
-  "1-2-architecture": "Architecture",
-  "1-3-senerios": "Senerios",
+  "1-1-problems": "Web3 钱包目前的问题",
+  "1-2-architecture": "GameOn 架构文档",
+  "1-3-senerios": "GameOn 基本场景",
   "---": {
     "type": "separator"
   },
-  "2-1-contracts": "4337 Contracts",
-  "2-2-modules": "GameOn Modules",
-  "2-3-features": "Features",
-  "3-1-tutorial": "Tutorial",
-  "4-1-demos": "Demos"
+  "2-1-contracts": "4337 基础合约",
+  "2-2-modules": "4337 其他模块",
+  "2-3-features": "GameOn 标准特性",
+  "3-1-tutorial": "4337 简易教程",
+  "4-1-demos": "案例 Demos"
 }
