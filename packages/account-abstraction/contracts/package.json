@@ -1,0 +1,9 @@
+{
+  "name": "@aa-lib/contracts",
+  "description": "Account Abstraction (EIP 4337) contracts",
+  "version": "0.1.0",
+  "scripts": {
+    "prepack": "../scripts/prepack-contracts-package.sh",
+    "postpack": "../scripts/postpack-contracts-package.sh"
+  }
+}
