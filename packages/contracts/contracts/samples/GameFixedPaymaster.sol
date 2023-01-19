@@ -58,19 +58,21 @@ contract GameFixedPaymaster is BasePaymaster {
         // verificationGasLimit is dual-purposed, as gas limit for postOp. make sure it is high enough
         // make sure that verificationGasLimit is high enough to handle postOp
         require(userOp.verificationGasLimit > COST_OF_POST, "GameFixedPaymaster: gas too low for postOp");
-        // delete isAccount[userOp.sender]; // not view
+        
+        bool chargeCreateFee;
 
         if (userOp.initCode.length != 0) {
             _validateConstructor(userOp);
             require(erc20Token.balanceOf(userOp.sender) >= createFee, "GameFixedPaymaster: no balance (pre-create)");
-            // isAccount[userOp.sender] = true;
+            chargeCreateFee = true;
         } else {
             require(erc20Token.balanceOf(userOp.sender) >= fixedFee, "GameFixedPaymaster: no balance");
         }
 
-        return (abi.encode(userOp.sender), 0);
+        return (abi.encode(userOp.sender, chargeCreateFee), 0);
     }
 
+    // todo - to be discuessed: delete _validateConstructor becuase signer is verified in entrypoint when creating wallet
     // when constructing an account, validate constructor code and parameters
     // we trust our factory (and that it doesn't have any other public methods)
     function _validateConstructor(UserOperation calldata userOp) internal virtual view {
@@ -88,14 +90,13 @@ contract GameFixedPaymaster is BasePaymaster {
     function _postOp(PostOpMode mode, bytes calldata context, uint256 /*actualGasCost*/) internal override {
         //we don't really care about the mode, we just pay the gas with the user's tokens.
         (mode);
-        address sender = abi.decode(context, (address));
-        // if (isAccount[sender]) {
-        //     require(erc20Token.transferFrom(sender, address(this), createFee), "GameFixedPaymaster: transfer failed (create)");
-        // } else {
-        //     require(erc20Token.transferFrom(sender, address(this), fixedFee), "GameFixedPaymaster: transfer failed");
-        // }
 
-        // TODO: check create account, how to get from context
-        require(erc20Token.transferFrom(sender, address(this), fixedFee), "GameFixedPaymaster: transfer failed");
+        (address sender, bool chargeCreateFee) = abi.decode(context, (address, bool));
+
+        if (chargeCreateFee) {
+            require(erc20Token.transferFrom(sender, address(this), createFee), "GameFixedPaymaster: transfer failed (create)");
+        } else {
+            require(erc20Token.transferFrom(sender, address(this), fixedFee), "GameFixedPaymaster: transfer failed");
+        }
     }
 }
