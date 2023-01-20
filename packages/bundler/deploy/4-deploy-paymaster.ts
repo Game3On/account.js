@@ -8,18 +8,19 @@ const deployPaymanster: DeployFunction = async function (hre: HardhatRuntimeEnvi
   const dep = new DeterministicDeployer(ethers.provider)
   const epAddr = await dep.getDeterministicDeployAddress(WETHPaymaster__factory.bytecode)
   if (await dep.isContractDeployed(epAddr)) {
-    console.log('EntryPoint already deployed at', epAddr)
+    console.log('WETHPaymaster already deployed at', epAddr)
     return
   }
 
   const net = await hre.ethers.provider.getNetwork()
   if (net.chainId !== 1337 && net.chainId !== 31337) {
-    console.log('NOT deploying EntryPoint. use pre-deployed entrypoint')
+    console.log('NOT deploying WETHPaymaster. use pre-deployed wethPaymaster')
     process.exit(1)
   }
 
-  await dep.deterministicDeploy(WETHPaymaster__factory.bytecode, 0, [ethers.provider.getSigner()])
-  console.log('Deployed EntryPoint at', epAddr)
+  const wethPaymasterFactory = new WETHPaymaster__factory(ethers.provider.getSigner())
+  await dep.deterministicDeploy(wethPaymasterFactory)
+  console.log('Deployed WETHPaymaster at', epAddr)
 }
 
 export default deployPaymanster
