@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "runop": "ts-node ./src/runner/runop.ts",
+    "runopweth": "ts-node ./src/runner/runopweth.ts",
     "bundler": "ts-node ./src/exec.ts --config ./localconfig/bundler.config.json",
     "clear": "rm -rf dist artifacts cache src/types",
     "hardhat-compile": "hardhat compile",

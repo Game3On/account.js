@@ -15,7 +15,7 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
  * - the paymaster signs to agree to PAY for GAS.
  * - the wallet signs to prove identity and account ownership.
  */
-contract VerifyingPaymaster is BasePaymaster {
+contract GaslessPaymaster is BasePaymaster {
 
     using ECDSA for bytes32;
     using UserOperationLib for UserOperation;
