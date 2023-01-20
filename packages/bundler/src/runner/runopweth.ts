@@ -88,7 +88,6 @@ class Runner {
       data
     })
     try {
-      console.log('userOp', userOp)
       const userOpHash = await this.bundlerProvider.sendUserOpToBundler(userOp)
       const txid = await this.accountApi.getUserOpReceipt(userOpHash)
       console.log('reqId', userOpHash, 'txid=', txid)
@@ -185,6 +184,7 @@ async function main (): Promise<void> {
   console.log('account address', dest, 'deployed=', await isDeployed(dest), 'bal=', formatEther(bal))
 
   const data = keccak256(Buffer.from('nonce()')).slice(0, 10)
+  const sendweth = keccak256(Buffer.from('nonce()')).slice(0, 10)
   console.log('data=', data)
   await client.runUserOp(dest, data)
   console.log('after run1')
