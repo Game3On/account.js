@@ -2,6 +2,8 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { parseEther } from 'ethers/lib/utils'
 
+const HH_ACCOUNT0 = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
+
 const fundsigner: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   // on geth, fund the default "hardhat node" account.
 

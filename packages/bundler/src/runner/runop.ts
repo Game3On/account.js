@@ -17,6 +17,10 @@ import { runBundler } from '../runBundler'
 import { BundlerServer } from '../BundlerServer'
 
 const ENTRY_POINT = '0x1306b01bc3e4ad202612d3843387e94737673f53'
+const FIXED_ORACLE = '0xe24a7f6728e4b3dcaca77d0d8dc0bc3da1055340'
+const ERC20_WETH = '0xfb970555c468b82cd55831d09bb4c7ee85188675'
+const ACCOUNT_FACTORY = '0x17d2a828e552031d2063442cca4f4a1d1d0119e1'
+const WETH_PAYMASTER = '0x58b683850a21d4f99f72d492b58f5713c9c98de6'
 
 class Runner {
   bundlerProvider!: HttpRpcClient
@@ -111,10 +115,12 @@ async function main (): Promise<void> {
 
   const opts = program.parse().opts()
   const provider = getDefaultProvider(opts.network) as JsonRpcProvider
-  let signer: Signer
   const deployFactory: boolean = opts.deployFactory
+
+  let signer: Signer
   let bundler: BundlerServer | undefined
   if (opts.selfBundler != null) {
+    // 这里是启动bundler
     // todo: if node is geth, we need to fund our bundler's account:
     const signer = provider.getSigner()
 
@@ -136,10 +142,12 @@ async function main (): Promise<void> {
     bundler = await runBundler(argv)
     await bundler.asyncStart()
   }
+
   if (opts.mnemonic != null) {
     signer = Wallet.fromMnemonic(fs.readFileSync(opts.mnemonic, 'ascii').trim()).connect(provider)
   } else {
     try {
+      // hardhat则使用第一个账户
       const accounts = await provider.listAccounts()
       if (accounts.length === 0) {
         console.log('fatal: no account. use --mnemonic (needed to fund account)')
@@ -152,6 +160,7 @@ async function main (): Promise<void> {
       throw new Error('must specify --mnemonic')
     }
   }
+  // 0x7777
   const accountOwner = new Wallet('0x'.padEnd(66, '7'))
 
   const index = Date.now()
