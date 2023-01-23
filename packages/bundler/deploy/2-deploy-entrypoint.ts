@@ -32,12 +32,13 @@ const deployEP: DeployFunction = async function (hre: HardhatRuntimeEnvironment)
   console.log('Deployed WETH at', wethAddr)
 
   // deploy account factory
-  const factory = await dep.deterministicDeploy(new SimpleAccountFactory__factory(), 0, [epAddr])
-  console.log('Deployed SimpleAccountFactory at', factory)
+  const accFactory = await dep.deterministicDeploy(new SimpleAccountFactory__factory(), 0, [epAddr])
+  console.log('Deployed SimpleAccountFactory at', accFactory)
 
   // 1. deploy paymaster
-  const paymaster = await dep.deterministicDeploy(new WETHPaymaster__factory(), 0, [factory, epAddr, wethAddr])
-  console.log('Deployed WETHPaymaster at', paymaster)
+  const factory = new WETHPaymaster__factory().connect(ethers.provider.getSigner())
+  const paymaster = await factory.deploy(epAddr, wethAddr, oracleAddr)
+  console.log('Deployed WETHPaymaster at', paymaster.address)
 
   // deploy usdtoken
   // const usdtAddr = await dep.deterministicDeploy(USDToken__factory.bytecode)

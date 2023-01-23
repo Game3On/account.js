@@ -5,23 +5,20 @@
  * for a simple target method, we just call the "nonce" method of the account itself.
  */
 
-import { BigNumber, getDefaultProvider, Signer, Wallet } from 'ethers'
-import { JsonRpcProvider } from '@ethersproject/providers'
-import { SimpleAccountFactory__factory } from '@aa-lib/contracts'
+import { BigNumber, getDefaultProvider, Signer, Wallet, Contract } from 'ethers'
 import { formatEther, keccak256, parseEther } from 'ethers/lib/utils'
+import { JsonRpcProvider } from '@ethersproject/providers'
 import { Command } from 'commander'
 import { erc4337RuntimeVersion } from '@aa-lib/utils'
-import fs from 'fs'
-import { DeterministicDeployer, HttpRpcClient, SimpleAccountAPI } from '@aa-lib/sdk'
-import { runBundler } from '../runBundler'
-import { BundlerServer } from '../BundlerServer'
+import { WETH__factory, WETHPaymaster__factory } from '@aa-lib/contracts'
+import { DeterministicDeployer, HttpRpcClient, SimpleAccountAPI, PaymasterAPI } from '@aa-lib/sdk'
 import { parseExpectedGas } from './utils'
 
 const ENTRY_POINT = '0x1306b01bc3e4ad202612d3843387e94737673f53'
 const FIXED_ORACLE = '0xe24a7f6728e4b3dcaca77d0d8dc0bc3da1055340'
-const ERC20_WETH = '0xfb970555c468b82cd55831d09bb4c7ee85188675'
+const WETH = '0xfb970555c468b82cd55831d09bb4c7ee85188675'
 const ACCOUNT_FACTORY = '0x17d2a828e552031d2063442cca4f4a1d1d0119e1'
-const WETH_PAYMASTER = '0x58b683850a21d4f99f72d492b58f5713c9c98de6'
+const WETH_PAYMASTER = '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707'
 
 class Runner {
   bundlerProvider!: HttpRpcClient
@@ -39,7 +36,6 @@ class Runner {
     readonly provider: JsonRpcProvider,
     readonly bundlerUrl: string,
     readonly accountOwner: Signer,
-    readonly entryPointAddress = ENTRY_POINT,
     readonly index = 0
   ) {
   }
@@ -49,14 +45,19 @@ class Runner {
   }
 
   async init (): Promise<this> {
-    const net = await this.provider.getNetwork()
-    const chainId = net.chainId
-    // deploy the account factory, if needed
-    this.bundlerProvider = new HttpRpcClient(this.bundlerUrl, this.entryPointAddress, chainId)
+    // const net = await this.provider.getNetwork()
+    // const chainId = net.chainId
+    // // deploy the account factory, if needed
+    // this.bundlerProvider = new HttpRpcClient(this.bundlerUrl, ENTRY_POINT, chainId)
+
+    const paymasterAPI = new PaymasterAPI(WETH_PAYMASTER)
+    console.log('paymasterAPI', await paymasterAPI.getPaymasterAndData({}))
+
     this.accountApi = new SimpleAccountAPI({
       provider: this.provider,
-      entryPointAddress: this.entryPointAddress,
+      entryPointAddress: ENTRY_POINT,
       factoryAddress: ACCOUNT_FACTORY,
+      paymasterAPI,
       owner: this.accountOwner,
       index: this.index,
       overheads: {
@@ -80,6 +81,14 @@ class Runner {
       throw parseExpectedGas(e)
     }
   }
+
+  async runLocal (target: string, data: string): Promise<void> {
+    const userOp = await this.accountApi.createSignedUserOp({
+      target,
+      data
+    })
+    console.log('读取 userOp', userOp)
+  }
 }
 
 async function main (): Promise<void> {
@@ -97,7 +106,7 @@ async function main (): Promise<void> {
   const provider = getDefaultProvider(opts.network) as JsonRpcProvider
 
   let signer: Signer
-  let bundler: BundlerServer | undefined
+  // let bundler: BundlerServer | undefined
   if (opts.selfBundler != null) {
     // 这里是启动bundler
   }
@@ -118,6 +127,32 @@ async function main (): Promise<void> {
     throw new Error('must specify --mnemonic')
   }
 
+  // signer transfer 10 eth to WETH
+  const eth0 = await signer.getBalance()
+  console.log('eth0=', formatEther(eth0))
+
+  await signer.sendTransaction({
+    to: WETH,
+    value: parseEther('10')
+  })
+
+  const eth1 = await signer.getBalance()
+  console.log('eth1=', formatEther(eth1))
+
+  // check WETH balance
+  const weth = WETH__factory.connect(WETH, signer)
+  const wethBal = await weth.balanceOf(signer.getAddress())
+  console.log('weth bal=', formatEther(wethBal))
+
+  const paymaster = WETHPaymaster__factory.connect(WETH_PAYMASTER, signer)
+  // paymaster deposit 1 eth
+  // console.log('paymaster owner:', await paymaster.owner())
+
+  await paymaster.deposit({ value: parseEther('1') })
+  await paymaster.addStake(1000, { value: parseEther('1') })
+  const deposit = await paymaster.getDeposit()
+  console.log('paymaster deposit=', formatEther(deposit))
+
   // 0x7777 secret key
   const accountOwner = new Wallet('0x'.padEnd(66, '7'))
 
@@ -130,34 +165,29 @@ async function main (): Promise<void> {
   }
 
   async function getBalance (addr: string): Promise<BigNumber> {
-    return await provider.getBalance(addr)
+    // return await provider.getBalance(addr)
+    return await weth.balanceOf(addr)
   }
+
+  // transfer 1 weth to addr
+  await weth.transfer(addr, parseEther('1'))
 
   const bal = await getBalance(addr)
   console.log('account address', addr, 'deployed=', await isDeployed(addr), 'bal=', formatEther(bal))
-  // TODO: actual required val
-  const requiredBalance = parseEther('0.5')
-  if (bal.lt(requiredBalance.div(2))) {
-    console.log('funding account to', requiredBalance)
-    await signer.sendTransaction({
-      to: addr,
-      value: requiredBalance.sub(bal)
-    })
-  } else {
-    console.log('not funding account. balance is enough')
-  }
-
-  const dest = addr
-  console.log('account address', dest, 'deployed=', await isDeployed(dest), 'bal=', formatEther(bal))
 
   const data = keccak256(Buffer.from('nonce()')).slice(0, 10)
   console.log('data=', data)
-  await client.runUserOp(dest, data)
-  console.log('after run1')
+
+  const dest = addr
+  // await client.runUserOp(dest, data)
+  // console.log('after run1')
+  await client.runLocal(dest, data)
+
+  console.log('account address', dest, 'deployed=', await isDeployed(dest), 'bal=', formatEther(bal))
+
   // client.accountApi.overheads!.perUserOp = 30000
-  await client.runUserOp(dest, data)
-  console.log('after run2')
-  await bundler?.stop()
+  // await client.runUserOp(dest, data)
+  // console.log('after run2')
 }
 
 void main()

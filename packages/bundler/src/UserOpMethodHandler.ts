@@ -147,8 +147,10 @@ export class UserOpMethodHandler {
 
     const userOp = await resolveProperties(userOp1)
 
-    console.log(`UserOperation: Sender=${userOp.sender}  Nonce=${tostr(userOp.nonce)} EntryPoint=${entryPointInput} Paymaster=${getAddr(
-      userOp.paymasterAndData)}`)
+    // console.log(`UserOperation: Sender=${userOp.sender}  Nonce=${tostr(userOp.nonce)} EntryPoint=${entryPointInput} Paymaster=${getAddr(
+    //   userOp.paymasterAndData)}`)
+    console.log(userOp)
+
     await this.execManager.sendUserOperation(userOp, entryPointInput)
     return await this.entryPoint.getUserOpHash(userOp)
   }
