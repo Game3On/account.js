@@ -37,7 +37,7 @@ const deployEP: DeployFunction = async function (hre: HardhatRuntimeEnvironment)
 
   // 1. deploy paymaster
   const factory = new WETHPaymaster__factory().connect(ethers.provider.getSigner())
-  const paymaster = await factory.deploy(epAddr, wethAddr, oracleAddr)
+  const paymaster = await factory.deploy(accFactory, epAddr, wethAddr)
   console.log('Deployed WETHPaymaster at', paymaster.address)
 
   // deploy usdtoken

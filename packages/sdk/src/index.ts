@@ -1,5 +1,6 @@
 export { SimpleAccountAPI } from './SimpleAccountAPI'
-export { PaymasterAPI } from './PaymasterAPI'
+export { GaslessPaymasterAPI } from './GaslessPaymasterAPI'
+export { WETHPaymasterAPI } from './WETHPaymasterAPI'
 export { wrapProvider } from './Provider'
 export { ERC4337EthersSigner } from './ERC4337EthersSigner'
 export { ERC4337EthersProvider } from './ERC4337EthersProvider'
