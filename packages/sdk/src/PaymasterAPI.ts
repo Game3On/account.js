@@ -3,11 +3,10 @@ import { UserOperationStruct } from '@aa-lib/contracts'
 /**
  * an API to external a UserOperation with paymaster info
  */
-export class PaymasterAPI {
+export abstract class PaymasterAPI {
   constructor (
     readonly paymaster: string
-  ) {
-  }
+  ) {}
 
   /**
    * @param userOp a partially-filled UserOperation (without signature and paymasterAndData

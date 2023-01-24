@@ -156,8 +156,8 @@ async function main (): Promise<void> {
   // 0x7777 secret key
   const accountOwner = new Wallet('0x'.padEnd(66, '7'))
 
-  const index = Date.now()
-  const client = await new Runner(provider, opts.bundlerUrl, accountOwner, opts.entryPoint, index).init()
+  // const index = Date.now()
+  const client = await new Runner(provider, opts.bundlerUrl, accountOwner).init()
   const addr = await client.getAddress()
 
   async function isDeployed (addr: string): Promise<boolean> {

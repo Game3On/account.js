@@ -17,7 +17,8 @@
     "hardhat-deploy": "lerna run hardhat-deploy --stream --no-prefix --",
     "bundler": "yarn --cwd packages/bundler bundler",
     "runop": "yarn --cwd packages/bundler runop",
-    "runopweth": "yarn --cwd packages/bundler runopweth"
+    "runopweth": "yarn --cwd packages/bundler runopweth",
+    "runopgasless": "yarn --cwd packages/bundler runopgasless"
   },
   "bugs": {
     "url": "https://github.com/Game3On/aa-lib/issues"
