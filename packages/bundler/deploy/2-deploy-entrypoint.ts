@@ -2,13 +2,15 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { ethers } from 'hardhat'
 import { DeterministicDeployer } from '@aa-lib/sdk'
-import { EntryPoint__factory, FixedOracle__factory, WETH__factory,
-  SimpleAccountFactory__factory, WETHPaymaster__factory, USDPaymaster__factory } from '@aa-lib/contracts'
+import { EntryPoint__factory, FixedOracle__factory, WETH__factory, SimpleAccountFactory__factory, WETHPaymaster__factory } from '@aa-lib/contracts'
+import { BundlerHelper__factory } from '../src/types/factories/contracts'
 
 // deploy entrypoint - but only on debug network..
 const deployEP: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const dep = new DeterministicDeployer(ethers.provider)
-  const epAddr = await dep.getDeterministicDeployAddress(EntryPoint__factory.bytecode)
+  const epAddr = DeterministicDeployer.getAddress(EntryPoint__factory.bytecode)
+  const bhAddr = DeterministicDeployer.getAddress(BundlerHelper__factory.bytecode)
+
   if (await dep.isContractDeployed(epAddr)) {
     console.log('EntryPoint already deployed at', epAddr)
     return
@@ -23,6 +25,9 @@ const deployEP: DeployFunction = async function (hre: HardhatRuntimeEnvironment)
   await dep.deterministicDeploy(EntryPoint__factory.bytecode)
   console.log('Deployed EntryPoint at', epAddr)
 
+  await dep.deterministicDeploy(BundlerHelper__factory.bytecode)
+  console.log('Deployed BundlerHelper at', bhAddr)
+
   // deploy oracle
   const oracleAddr = await dep.deterministicDeploy(FixedOracle__factory.bytecode)
   console.log('Deployed FixedOracle at', oracleAddr)
@@ -36,9 +41,10 @@ const deployEP: DeployFunction = async function (hre: HardhatRuntimeEnvironment)
   console.log('Deployed SimpleAccountFactory at', accFactory)
 
   // 1. deploy paymaster
-  const factory = new WETHPaymaster__factory().connect(ethers.provider.getSigner())
-  const paymaster = await factory.deploy(epAddr, wethAddr, oracleAddr)
-  console.log('Deployed WETHPaymaster at', paymaster.address)
+  const paymaster = await dep.deterministicDeploy(new WETHPaymaster__factory(), 0, [accFactory, epAddr, wethAddr])
+  // const factory = new WETHPaymaster__factory().connect(ethers.provider.getSigner())
+  // const paymaster = await factory.deploy(epAddr, wethAddr, oracleAddr)
+  console.log('Deployed WETHPaymaster at', paymaster)
 
   // deploy usdtoken
   // const usdtAddr = await dep.deterministicDeploy(USDToken__factory.bytecode)

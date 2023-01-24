@@ -5,7 +5,7 @@ import { BundlerConfig } from './BundlerConfig'
 import { resolveProperties } from 'ethers/lib/utils'
 import { deepHexlify } from '@aa-lib/utils'
 import { UserOperationStruct, EntryPoint } from '@aa-lib/contracts'
-import { UserOperationEventEvent } from '@aa-lib/contracts/types/EntryPoint'
+import { UserOperationEventEvent } from '@aa-lib/contracts/dist/types/EntryPoint'
 import { calcPreVerificationGas } from '@aa-lib/sdk'
 import { requireCond, RpcError, tostr } from './utils'
 import { ExecutionErrors, ExecutionManager } from './modules/ExecutionManager'
@@ -147,10 +147,8 @@ export class UserOpMethodHandler {
 
     const userOp = await resolveProperties(userOp1)
 
-    // console.log(`UserOperation: Sender=${userOp.sender}  Nonce=${tostr(userOp.nonce)} EntryPoint=${entryPointInput} Paymaster=${getAddr(
-    //   userOp.paymasterAndData)}`)
-    console.log(userOp)
-
+    console.log(`UserOperation: Sender=${userOp.sender}  Nonce=${tostr(userOp.nonce)} EntryPoint=${entryPointInput} Paymaster=${getAddr(
+      userOp.paymasterAndData)}`)
     await this.execManager.sendUserOperation(userOp, entryPointInput)
     return await this.entryPoint.getUserOpHash(userOp)
   }

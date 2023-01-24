@@ -17,13 +17,10 @@ export class HttpRpcClient {
     readonly entryPointAddress: string,
     readonly chainId: number
   ) {
-    this.userOpJsonRpcProvider = new ethers.providers.JsonRpcProvider(
-      this.bundlerUrl,
-      {
-        name: 'Connected bundler network',
-        chainId
-      }
-    )
+    this.userOpJsonRpcProvider = new ethers.providers.JsonRpcProvider(this.bundlerUrl, {
+      name: 'Connected bundler network',
+      chainId
+    })
     this.initializing = this.validateChainId()
   }
 
@@ -32,9 +29,7 @@ export class HttpRpcClient {
     const chain = await this.userOpJsonRpcProvider.send('eth_chainId', [])
     const bundlerChain = parseInt(chain)
     if (bundlerChain !== this.chainId) {
-      throw new Error(
-        `bundler ${this.bundlerUrl} is on chainId ${bundlerChain}, but provider is on chainId ${this.chainId}`
-      )
+      throw new Error(`bundler ${this.bundlerUrl} is on chainId ${bundlerChain}, but provider is on chainId ${this.chainId}`)
     }
   }
 
@@ -46,50 +41,27 @@ export class HttpRpcClient {
   async sendUserOpToBundler (userOp1: UserOperationStruct): Promise<string> {
     await this.initializing
     const hexifiedUserOp = deepHexlify(await resolveProperties(userOp1))
-    const jsonRequestData: [UserOperationStruct, string] = [
-      hexifiedUserOp,
-      this.entryPointAddress
-    ]
+    const jsonRequestData: [UserOperationStruct, string] = [hexifiedUserOp, this.entryPointAddress]
     await this.printUserOperation('eth_sendUserOperation', jsonRequestData)
-    return await this.userOpJsonRpcProvider.send('eth_sendUserOperation', [
-      hexifiedUserOp,
-      this.entryPointAddress
-    ])
+    return await this.userOpJsonRpcProvider
+      .send('eth_sendUserOperation', [hexifiedUserOp, this.entryPointAddress])
   }
 
-  async estimateUserOpGas (
-    userOp1: Partial<UserOperationStruct>
-  ): Promise<string> {
+  async estimateUserOpGas (userOp1: Partial<UserOperationStruct>): Promise<string> {
     await this.initializing
     const hexifiedUserOp = deepHexlify(await resolveProperties(userOp1))
-    const jsonRequestData: [UserOperationStruct, string] = [
-      hexifiedUserOp,
-      this.entryPointAddress
-    ]
-    await this.printUserOperation(
-      'eth_estimateUserOperationGas',
-      jsonRequestData
-    )
-    return await this.userOpJsonRpcProvider.send(
-      'eth_estimateUserOperationGas',
-      [hexifiedUserOp, this.entryPointAddress]
-    )
+    const jsonRequestData: [UserOperationStruct, string] = [hexifiedUserOp, this.entryPointAddress]
+    await this.printUserOperation('eth_estimateUserOperationGas', jsonRequestData)
+    return await this.userOpJsonRpcProvider
+      .send('eth_estimateUserOperationGas', [hexifiedUserOp, this.entryPointAddress])
   }
 
-  private async printUserOperation (
-    method: string,
-    [userOp1, entryPointAddress]: [UserOperationStruct, string]
-  ): Promise<void> {
+  private async printUserOperation (method: string, [userOp1, entryPointAddress]: [UserOperationStruct, string]): Promise<void> {
     const userOp = await resolveProperties(userOp1)
-    debug(
-      'sending',
-      method,
-      {
-        ...userOp
-        // initCode: (userOp.initCode ?? '').length,
-        // callData: (userOp.callData ?? '').length
-      },
-      entryPointAddress
-    )
+    debug('sending', method, {
+      ...userOp
+      // initCode: (userOp.initCode ?? '').length,
+      // callData: (userOp.callData ?? '').length
+    }, entryPointAddress)
   }
 }

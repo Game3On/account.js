@@ -1,9 +1,12 @@
 // TODO: consider adopting config-loading approach from hardhat to allow code in config file
+import { DeterministicDeployer } from '@aa-lib/sdk'
 import ow from 'ow'
+import { BundlerHelper__factory } from './types'
 
 export interface BundlerConfig {
   beneficiary: string
   entryPoint: string
+  bundlerHelper: string
   gasFactor: string
   minBalance: string
   mnemonic: string
@@ -24,6 +27,7 @@ export interface BundlerConfig {
 export const BundlerConfigShape = {
   beneficiary: ow.string,
   entryPoint: ow.string,
+  bundlerHelper: ow.string,
   gasFactor: ow.string,
   minBalance: ow.string,
   mnemonic: ow.string,
@@ -45,5 +49,6 @@ export const BundlerConfigShape = {
 export const bundlerConfigDefault: Partial<BundlerConfig> = {
   port: '3000',
   entryPoint: '0x1306b01bC3e4AD202612D3843387e94737673F53',
+  bundlerHelper: DeterministicDeployer.getAddress(BundlerHelper__factory.bytecode),
   unsafe: false
 }

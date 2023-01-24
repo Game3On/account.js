@@ -171,8 +171,10 @@ export class BundlerServer {
         result = 'ok'
         break
       case 'debug_bundler_sendBundleNow':
-        await this.debugHandler.sendBundleNow()
-        result = 'ok'
+        result = await this.debugHandler.sendBundleNow()
+        if (result == null) {
+          result = 'ok'
+        }
         break
       default:
         throw new RpcError(`Method ${method} is not supported`, -32601)

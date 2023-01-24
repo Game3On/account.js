@@ -17,10 +17,6 @@ import { runBundler } from '../runBundler'
 import { BundlerServer } from '../BundlerServer'
 
 const ENTRY_POINT = '0x1306b01bc3e4ad202612d3843387e94737673f53'
-const FIXED_ORACLE = '0xe24a7f6728e4b3dcaca77d0d8dc0bc3da1055340'
-const ERC20_WETH = '0xfb970555c468b82cd55831d09bb4c7ee85188675'
-const ACCOUNT_FACTORY = '0x17d2a828e552031d2063442cca4f4a1d1d0119e1'
-const WETH_PAYMASTER = '0x58b683850a21d4f99f72d492b58f5713c9c98de6'
 
 class Runner {
   bundlerProvider!: HttpRpcClient
@@ -51,7 +47,7 @@ class Runner {
     const net = await this.provider.getNetwork()
     const chainId = net.chainId
     const dep = new DeterministicDeployer(this.provider)
-    const accountDeployer = await dep.getDeterministicDeployAddress(new SimpleAccountFactory__factory(), 0, [this.entryPointAddress])
+    const accountDeployer = DeterministicDeployer.getAddress(new SimpleAccountFactory__factory(), 0, [this.entryPointAddress])
     // const accountDeployer = await new SimpleAccountFactory__factory(this.provider.getSigner()).deploy().then(d=>d.address)
     if (!await dep.isContractDeployed(accountDeployer)) {
       if (deploymentSigner == null) {
@@ -91,8 +87,9 @@ class Runner {
       target,
       data
     })
+    console.log(userOp)
+
     try {
-      console.log('userOp', userOp)
       const userOpHash = await this.bundlerProvider.sendUserOpToBundler(userOp)
       const txid = await this.accountApi.getUserOpReceipt(userOpHash)
       console.log('reqId', userOpHash, 'txid=', txid)
@@ -115,12 +112,10 @@ async function main (): Promise<void> {
 
   const opts = program.parse().opts()
   const provider = getDefaultProvider(opts.network) as JsonRpcProvider
-  const deployFactory: boolean = opts.deployFactory
-
   let signer: Signer
+  const deployFactory: boolean = opts.deployFactory
   let bundler: BundlerServer | undefined
   if (opts.selfBundler != null) {
-    // 这里是启动bundler
     // todo: if node is geth, we need to fund our bundler's account:
     const signer = provider.getSigner()
 
@@ -142,12 +137,10 @@ async function main (): Promise<void> {
     bundler = await runBundler(argv)
     await bundler.asyncStart()
   }
-
   if (opts.mnemonic != null) {
     signer = Wallet.fromMnemonic(fs.readFileSync(opts.mnemonic, 'ascii').trim()).connect(provider)
   } else {
     try {
-      // hardhat则使用第一个账户
       const accounts = await provider.listAccounts()
       if (accounts.length === 0) {
         console.log('fatal: no account. use --mnemonic (needed to fund account)')
@@ -160,7 +153,6 @@ async function main (): Promise<void> {
       throw new Error('must specify --mnemonic')
     }
   }
-  // 0x7777
   const accountOwner = new Wallet('0x'.padEnd(66, '7'))
 
   const index = Date.now()
@@ -191,12 +183,12 @@ async function main (): Promise<void> {
   }
 
   const dest = addr
-  console.log('account address', dest, 'deployed=', await isDeployed(dest), 'bal=', formatEther(bal))
-
   const data = keccak256(Buffer.from('nonce()')).slice(0, 10)
   console.log('data=', data)
   await client.runUserOp(dest, data)
   console.log('after run1')
+  const bal1 = await getBalance(dest)
+  console.log('account address', addr, 'deployed=', await isDeployed(addr), 'bal=', formatEther(bal1))
   // client.accountApi.overheads!.perUserOp = 30000
   await client.runUserOp(dest, data)
   console.log('after run2')
