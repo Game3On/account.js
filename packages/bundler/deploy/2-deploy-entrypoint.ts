@@ -3,7 +3,7 @@ import { DeployFunction } from 'hardhat-deploy/types'
 import { ethers } from 'hardhat'
 import { DeterministicDeployer } from '@aa-lib/sdk'
 import { EntryPoint__factory, FixedOracle__factory, WETH__factory,
-  SimpleAccountFactory__factory, WETHPaymaster__factory, USDPaymaster__factory } from '@aa-lib/contracts'
+  SimpleAccountFactory__factory, SimpleAccountForTokensFactory__factory, WETHPaymaster__factory, USDPaymaster__factory } from '@aa-lib/contracts'
 
 // deploy entrypoint - but only on debug network..
 const deployEP: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -32,8 +32,8 @@ const deployEP: DeployFunction = async function (hre: HardhatRuntimeEnvironment)
   console.log('Deployed WETH at', wethAddr)
 
   // deploy account factory
-  const accFactory = await dep.deterministicDeploy(new SimpleAccountFactory__factory(), 0, [epAddr])
-  console.log('Deployed SimpleAccountFactory at', accFactory)
+  const accFactory = await dep.deterministicDeploy(new SimpleAccountForTokensFactory__factory(), 0, [epAddr])
+  console.log('Deployed SimpleAccountForTokensFactory at', accFactory)
 
   // 1. deploy paymaster
   const factory = new WETHPaymaster__factory().connect(ethers.provider.getSigner())

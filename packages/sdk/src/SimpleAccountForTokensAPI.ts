@@ -17,6 +17,8 @@ import { BaseApiParams, BaseAccountAPI } from './BaseAccountAPI'
  */
 export interface SimpleAccountForTokensApiParams extends BaseApiParams {
   owner: Signer
+  token: string
+  paymaster: string
   factoryAddress?: string
   index?: number
 
@@ -32,6 +34,8 @@ export interface SimpleAccountForTokensApiParams extends BaseApiParams {
 export class SimpleAccountForTokensAPI extends BaseAccountAPI {
   factoryAddress?: string
   owner: Signer
+  token: string
+  paymaster: string
   index: number
 
   /**
@@ -46,6 +50,8 @@ export class SimpleAccountForTokensAPI extends BaseAccountAPI {
     super(params)
     this.factoryAddress = params.factoryAddress
     this.owner = params.owner
+    this.token = params.token
+    this.paymaster = params.paymaster
     this.index = params.index ?? 0
   }
 
@@ -70,7 +76,7 @@ export class SimpleAccountForTokensAPI extends BaseAccountAPI {
     }
     return hexConcat([
       this.factory.address,
-      this.factory.interface.encodeFunctionData('createAccount', [await this.owner.getAddress(), this.index])
+      this.factory.interface.encodeFunctionData('createAccount', [await this.owner.getAddress(), this.token, this.paymaster, this.index])
     ])
   }
 

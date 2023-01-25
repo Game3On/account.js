@@ -52,7 +52,8 @@ export async function wrapProvider (
 export async function wrapPaymasterProvider (
   originalProvider: JsonRpcProvider,
   config: ClientConfig,
-  originalSigner: Signer = originalProvider.getSigner()
+  originalSigner: Signer = originalProvider.getSigner(),
+  token: string, paymaster: string
 ): Promise<ERC4337EthersProvider> {
   const entryPoint = EntryPoint__factory.connect(config.entryPointAddress, originalProvider)
   // Initial SimpleAccount instance is not deployed and exists just for the interface
@@ -65,6 +66,8 @@ export async function wrapPaymasterProvider (
     provider: originalProvider,
     entryPointAddress: entryPoint.address,
     owner: originalSigner,
+    token,
+    paymaster,
     factoryAddress: SimpleAccountFactory,
     paymasterAPI: config.paymasterAPI
   })

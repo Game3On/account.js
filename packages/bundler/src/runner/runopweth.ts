@@ -7,25 +7,24 @@
 
 import { BigNumber, getDefaultProvider, Signer, Wallet } from 'ethers'
 import { JsonRpcProvider } from '@ethersproject/providers'
-import { SimpleAccountFactory__factory } from '@aa-lib/contracts'
 import { formatEther, keccak256, parseEther } from 'ethers/lib/utils'
 import { Command } from 'commander'
 import { erc4337RuntimeVersion } from '@aa-lib/utils'
 import fs from 'fs'
-import { WETH__factory, WETHPaymaster__factory, EntryPoint__factory } from '@aa-lib/contracts'
-import { DeterministicDeployer, HttpRpcClient, SimpleAccountAPI, WETHPaymasterAPI } from '@aa-lib/sdk'
+import { WETH__factory, WETHPaymaster__factory, EntryPoint__factory, SimpleAccountForTokensFactory__factory } from '@aa-lib/contracts'
+import { DeterministicDeployer, HttpRpcClient, SimpleAccountForTokensAPI, WETHPaymasterAPI } from '@aa-lib/sdk'
 import { runBundler } from '../runBundler'
 import { BundlerServer } from '../BundlerServer'
 
 const ENTRY_POINT = '0x1306b01bc3e4ad202612d3843387e94737673f53'
 const FIXED_ORACLE = '0xe24a7f6728e4b3dcaca77d0d8dc0bc3da1055340'
 const WETH = '0xfb970555c468b82cd55831d09bb4c7ee85188675'
-const ACCOUNT_FACTORY = '0x17d2a828e552031d2063442cca4f4a1d1d0119e1'
+const ACC_FACTORY = '0x705560872870af0225199eee070d807aa585c0ea'
 const WETH_PAYMASTER = '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707'
 const beneficiary = '0xd21934eD8eAf27a67f0A70042Af50A1D6d195E81'
 class Runner {
   bundlerProvider!: HttpRpcClient
-  accountApi!: SimpleAccountAPI
+  accountApi!: SimpleAccountForTokensAPI
 
   /**
    *
@@ -51,28 +50,30 @@ class Runner {
   async init (deploymentSigner?: Signer): Promise<this> {
     const net = await this.provider.getNetwork()
     const chainId = net.chainId
-    const dep = new DeterministicDeployer(this.provider)
-    const accountDeployer = await dep.getDeterministicDeployAddress(new SimpleAccountFactory__factory(), 0, [this.entryPointAddress])
-    // const accountDeployer = await new SimpleAccountFactory__factory(this.provider.getSigner()).deploy().then(d=>d.address)
-    if (!await dep.isContractDeployed(accountDeployer)) {
-      if (deploymentSigner == null) {
-        console.log(`AccountDeployer not deployed at ${accountDeployer}. run with --deployFactory`)
-        process.exit(1)
-      }
-      const dep1 = new DeterministicDeployer(deploymentSigner.provider as any)
-      await dep1.deterministicDeploy(new SimpleAccountFactory__factory(), 0, [this.entryPointAddress])
-    }
+    // const dep = new DeterministicDeployer(this.provider)
+    // const accountDeployer = await dep.getDeterministicDeployAddress(new SimpleAccountForTokensFactory__factory(), 0, [this.entryPointAddress])
+    // // const accountDeployer = await new SimpleAccountForTokensFactory__factory(this.provider.getSigner()).deploy().then(d=>d.address)
+    // if (!await dep.isContractDeployed(accountDeployer)) {
+    //   if (deploymentSigner == null) {
+    //     console.log(`AccountDeployer not deployed at ${accountDeployer}. run with --deployFactory`)
+    //     process.exit(1)
+    //   }
+    //   const dep1 = new DeterministicDeployer(deploymentSigner.provider as any)
+    //   await dep1.deterministicDeploy(new SimpleAccountForTokensFactory__factory(), 0, [this.entryPointAddress, WETH, WETH_PAYMASTER])
+    // }
 
     const paymasterAPI = new WETHPaymasterAPI(WETH_PAYMASTER)
     console.log('paymasterAPI', await paymasterAPI.getPaymasterAndData({}))
 
     this.bundlerProvider = new HttpRpcClient(this.bundlerUrl, this.entryPointAddress, chainId)
-    this.accountApi = new SimpleAccountAPI({
+    this.accountApi = new SimpleAccountForTokensAPI({
       provider: this.provider,
       entryPointAddress: this.entryPointAddress,
-      factoryAddress: accountDeployer,
+      factoryAddress: ACC_FACTORY,
       paymasterAPI,
       owner: this.accountOwner,
+      token: WETH,
+      paymaster: WETH_PAYMASTER,
       index: this.index,
       overheads: {
         // perUserOp: 100000
