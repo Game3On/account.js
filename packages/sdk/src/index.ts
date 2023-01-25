@@ -1,4 +1,5 @@
 export { SimpleAccountAPI } from './SimpleAccountAPI'
+export { SimpleAccountForTokensAPI } from './SimpleAccountForTokensAPI'
 export { GaslessPaymasterAPI } from './GaslessPaymasterAPI'
 export { WETHPaymasterAPI } from './WETHPaymasterAPI'
 export { wrapProvider } from './Provider'

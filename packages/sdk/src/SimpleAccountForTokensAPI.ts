@@ -1,8 +1,8 @@
 import { BigNumber, BigNumberish } from 'ethers'
 import {
-  SimpleAccount,
-  SimpleAccount__factory, SimpleAccountFactory,
-  SimpleAccountFactory__factory
+  SimpleAccountForTokens,
+  SimpleAccountForTokens__factory, SimpleAccountForTokensFactory,
+  SimpleAccountForTokensFactory__factory
 } from '@aa-lib/contracts'
 
 import { arrayify, hexConcat } from 'ethers/lib/utils'
@@ -15,7 +15,7 @@ import { BaseApiParams, BaseAccountAPI } from './BaseAccountAPI'
  * @param factoryAddress address of contract "factory" to deploy new contracts (not needed if account already deployed)
  * @param index nonce value used when creating multiple accounts for the same owner
  */
-export interface SimpleAccountApiParams extends BaseApiParams {
+export interface SimpleAccountForTokensApiParams extends BaseApiParams {
   owner: Signer
   factoryAddress?: string
   index?: number
@@ -23,13 +23,13 @@ export interface SimpleAccountApiParams extends BaseApiParams {
 }
 
 /**
- * An implementation of the BaseAccountAPI using the SimpleAccount contract.
+ * An implementation of the BaseAccountAPI using the SimpleAccountForTokens contract.
  * - contract deployer gets "entrypoint", "owner" addresses and "index" nonce
  * - owner signs requests using normal "Ethereum Signed Message" (ether's signer.signMessage())
  * - nonce method is "nonce()"
  * - execute method is "execFromEntryPoint()"
  */
-export class SimpleAccountAPI extends BaseAccountAPI {
+export class SimpleAccountForTokensAPI extends BaseAccountAPI {
   factoryAddress?: string
   owner: Signer
   index: number
@@ -38,20 +38,20 @@ export class SimpleAccountAPI extends BaseAccountAPI {
    * our account contract.
    * should support the "execFromEntryPoint" and "nonce" methods
    */
-  accountContract?: SimpleAccount
+  accountContract?: SimpleAccountForTokens
 
-  factory?: SimpleAccountFactory
+  factory?: SimpleAccountForTokensFactory
 
-  constructor (params: SimpleAccountApiParams) {
+  constructor (params: SimpleAccountForTokensApiParams) {
     super(params)
     this.factoryAddress = params.factoryAddress
     this.owner = params.owner
     this.index = params.index ?? 0
   }
 
-  async _getAccountContract (): Promise<SimpleAccount> {
+  async _getAccountContract (): Promise<SimpleAccountForTokens> {
     if (this.accountContract == null) {
-      this.accountContract = SimpleAccount__factory.connect(await this.getAccountAddress(), this.provider)
+      this.accountContract = SimpleAccountForTokens__factory.connect(await this.getAccountAddress(), this.provider)
     }
     return this.accountContract
   }
@@ -63,7 +63,7 @@ export class SimpleAccountAPI extends BaseAccountAPI {
   async getAccountInitCode (): Promise<string> {
     if (this.factory == null) {
       if (this.factoryAddress != null && this.factoryAddress !== '') {
-        this.factory = SimpleAccountFactory__factory.connect(this.factoryAddress, this.provider)
+        this.factory = SimpleAccountForTokensFactory__factory.connect(this.factoryAddress, this.provider)
       } else {
         throw new Error('no factory to get initCode')
       }

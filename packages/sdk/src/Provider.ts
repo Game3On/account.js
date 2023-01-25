@@ -1,9 +1,10 @@
 import { JsonRpcProvider } from '@ethersproject/providers'
 
-import { EntryPoint__factory, SimpleAccountFactory__factory } from '@aa-lib/contracts'
+import { EntryPoint__factory, SimpleAccountFactory__factory, SimpleAccountForTokensFactory__factory } from '@aa-lib/contracts'
 
 import { ClientConfig } from './ClientConfig'
 import { SimpleAccountAPI } from './SimpleAccountAPI'
+import { SimpleAccountForTokensAPI } from './SimpleAccountForTokensAPI'
 import { ERC4337EthersProvider } from './ERC4337EthersProvider'
 import { HttpRpcClient } from './HttpRpcClient'
 import { DeterministicDeployer } from './DeterministicDeployer'
@@ -47,3 +48,37 @@ export async function wrapProvider (
     smartAccountAPI
   ).init()
 }
+
+export async function wrapPaymasterProvider (
+  originalProvider: JsonRpcProvider,
+  config: ClientConfig,
+  originalSigner: Signer = originalProvider.getSigner()
+): Promise<ERC4337EthersProvider> {
+  const entryPoint = EntryPoint__factory.connect(config.entryPointAddress, originalProvider)
+  // Initial SimpleAccount instance is not deployed and exists just for the interface
+  const detDeployer = new DeterministicDeployer(originalProvider)
+  const SimpleAccountFactory = await detDeployer.deterministicDeploy(new SimpleAccountForTokensFactory__factory(), 0, [entryPoint.address])
+
+  // paymaster
+
+  const smartAccountAPI = new SimpleAccountForTokensAPI({
+    provider: originalProvider,
+    entryPointAddress: entryPoint.address,
+    owner: originalSigner,
+    factoryAddress: SimpleAccountFactory,
+    paymasterAPI: config.paymasterAPI
+  })
+  debug('config=', config)
+  const chainId = await originalProvider.getNetwork().then(net => net.chainId)
+  const httpRpcClient = new HttpRpcClient(config.bundlerUrl, config.entryPointAddress, chainId)
+  return await new ERC4337EthersProvider(
+    chainId,
+    config,
+    originalSigner,
+    originalProvider,
+    httpRpcClient,
+    entryPoint,
+    smartAccountAPI
+  ).init()
+}
+
