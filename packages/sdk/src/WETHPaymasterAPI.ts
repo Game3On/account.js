@@ -1,10 +1,10 @@
-import { PaymasterAPI } from './PaymasterAPI'
+import { BasePaymasterAPI } from './BasePaymasterAPI'
 import { UserOperationStruct } from '@aa-lib/contracts'
 
 /**
  * an API to external a UserOperation with paymaster info
  */
-export class WETHPaymasterAPI extends PaymasterAPI {
+export class WETHPaymasterAPI extends BasePaymasterAPI {
   constructor (
     readonly paymaster: string
   ) {

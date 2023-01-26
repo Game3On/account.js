@@ -3,7 +3,7 @@ import { UserOperationStruct } from '@aa-lib/contracts'
 /**
  * an API to external a UserOperation with paymaster info
  */
-export abstract class PaymasterAPI {
+export abstract class BasePaymasterAPI {
   constructor (
     readonly paymaster: string
   ) {}

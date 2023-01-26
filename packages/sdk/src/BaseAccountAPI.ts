@@ -7,7 +7,7 @@ import {
 
 import { TransactionDetailsForUserOp } from './TransactionDetailsForUserOp'
 import { resolveProperties } from 'ethers/lib/utils'
-import { PaymasterAPI } from './PaymasterAPI'
+import { BasePaymasterAPI } from './BasePaymasterAPI'
 import { getUserOpHash, NotPromise, packUserOp } from '@aa-lib/utils'
 import { calcPreVerificationGas, GasOverheads } from './calcPreVerificationGas'
 
@@ -16,7 +16,7 @@ export interface BaseApiParams {
   entryPointAddress: string
   accountAddress?: string
   overheads?: Partial<GasOverheads>
-  paymasterAPI?: PaymasterAPI
+  paymasterAPI?: BasePaymasterAPI
 }
 
 export interface UserOpResult {
@@ -47,7 +47,7 @@ export abstract class BaseAccountAPI {
   overheads?: Partial<GasOverheads>
   entryPointAddress: string
   accountAddress?: string
-  paymasterAPI?: PaymasterAPI
+  paymasterAPI?: BasePaymasterAPI
 
   /**
    * base constructor.

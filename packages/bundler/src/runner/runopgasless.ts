@@ -7,22 +7,24 @@
 
 import { BigNumber, getDefaultProvider, Signer, Wallet } from 'ethers'
 import { JsonRpcProvider } from '@ethersproject/providers'
-import { SimpleAccountFactory__factory } from '@aa-lib/contracts'
 import { formatEther, keccak256, parseEther } from 'ethers/lib/utils'
 import { Command } from 'commander'
-import { erc4337RuntimeVersion } from '@aa-lib/utils'
-import { DeterministicDeployer, HttpRpcClient, SimpleAccountAPI, GaslessPaymasterAPI } from '@aa-lib/sdk'
+import { erc4337RuntimeVersion, rethrowError } from '@aa-lib/utils'
+import { VerifyingPaymaster__factory, EntryPoint__factory } from '@aa-lib/contracts'
+import { HttpRpcClient, SimpleAccountAPI, VerifiedPaymasterAPI } from '@aa-lib/sdk'
 import { runBundler } from '../runBundler'
 import { BundlerServer } from '../BundlerServer'
 import { parseExpectedGas } from './utils'
 
-
 const ENTRY_POINT = '0x1306b01bc3e4ad202612d3843387e94737673f53'
-const FIXED_ORACLE = '0xe24a7f6728e4b3dcaca77d0d8dc0bc3da1055340'
 const WETH = '0xfb970555c468b82cd55831d09bb4c7ee85188675'
-const ACCOUNT_FACTORY = '0x17d2a828e552031d2063442cca4f4a1d1d0119e1'
-const GASLESS_PAYMASTER = '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707'
-
+const USDT = '0x5c2a4de344f3d2a69aaddbe9aad984074647d0ca'
+const ACC_FACTORY = '0x17d2a828e552031d2063442cca4f4a1d1d0119e1'
+const ACCTOK_FACTORY = '0x705560872870af0225199eee070d807aa585c0ea'
+const WETH_PAYMASTER = '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707'
+const USD_PAYMASTER = '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853'
+const GASLESS_PAYMASTER = '0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6'
+const beneficiary = '0xd21934eD8eAf27a67f0A70042Af50A1D6d195E81'
 class Runner {
   bundlerProvider!: HttpRpcClient
   accountApi!: SimpleAccountAPI
@@ -32,12 +34,14 @@ class Runner {
    * @param provider - a provider for initialization. This account is used to fund the created account contract, but it is not the account or its owner.
    * @param bundlerUrl - a URL to a running bundler. must point to the same network the provider is.
    * @param accountOwner - the wallet signer account. used only as signer (not as transaction sender)
+   * @param entryPointAddress - the entrypoint address to use.
    * @param index - unique salt, to allow multiple accounts with the same owner
    */
   constructor (
     readonly provider: JsonRpcProvider,
     readonly bundlerUrl: string,
     readonly accountOwner: Signer,
+    readonly entryPointAddress = ENTRY_POINT,
     readonly index = 0
   ) {
   }
@@ -48,28 +52,20 @@ class Runner {
 
   async init (deploymentSigner?: Signer): Promise<this> {
     if (deploymentSigner == null) {
-      console.log(`run with --deployFactory`)
+      console.log('run with --deployFactory')
       process.exit(1)
     }
 
+    const paymasterAPI = new VerifiedPaymasterAPI(GASLESS_PAYMASTER, await this.provider.getSigner())
+
     const net = await this.provider.getNetwork()
     const chainId = net.chainId
-    const dep = new DeterministicDeployer(this.provider)
-    const accountDeployer = await dep.getDeterministicDeployAddress(new SimpleAccountFactory__factory(), 0, [ENTRY_POINT])
-    // const accountDeployer = await new SimpleAccountFactory__factory(this.provider.getSigner()).deploy().then(d=>d.address)
-    if (!await dep.isContractDeployed(accountDeployer)) {
-      const dep1 = new DeterministicDeployer(deploymentSigner.provider as any)
-      await dep1.deterministicDeploy(new SimpleAccountFactory__factory(), 0, [ENTRY_POINT])
-    }
+    this.bundlerProvider = new HttpRpcClient(this.bundlerUrl, this.entryPointAddress, chainId)
 
-    // signer as verifier
-    const paymasterAPI = new GaslessPaymasterAPI(GASLESS_PAYMASTER, deploymentSigner)
-
-    this.bundlerProvider = new HttpRpcClient(this.bundlerUrl, ENTRY_POINT, chainId)
     this.accountApi = new SimpleAccountAPI({
       provider: this.provider,
-      entryPointAddress: ENTRY_POINT,
-      factoryAddress: accountDeployer,
+      entryPointAddress: this.entryPointAddress,
+      factoryAddress: ACC_FACTORY,
       paymasterAPI,
       owner: this.accountOwner,
       index: this.index,
@@ -88,10 +84,40 @@ class Runner {
     console.log(userOp)
 
     try {
+      const userOpHash = await this.bundlerProvider.sendUserOpToBundler(userOp)
+      const txid = await this.accountApi.getUserOpReceipt(userOpHash)
+      console.log('reqId', userOpHash, 'txid=', txid)
+    } catch (e: any) {
+      throw parseExpectedGas(e)
+    }
+  }
+
+  async estUserOp (target: string, data: string): Promise<void> {
+    const userOp = await this.accountApi.createSignedUserOp({
+      target,
+      data
+    })
+    console.log(userOp)
+    try {
       const estimateUserOpGas = await this.bundlerProvider.estimateUserOpGas(userOp)
       console.log('estimateUserOpGas', estimateUserOpGas)
     } catch (e: any) {
       throw parseExpectedGas(e)
+    }
+  }
+
+  async hdlUserOp (target: string, data: string, signer: Signer): Promise<void> {
+    const userOp = await this.accountApi.createSignedUserOp({
+      target,
+      data
+    })
+    console.log(userOp)
+    try {
+      const entrypoint = new EntryPoint__factory(signer).attach(this.entryPointAddress)
+      await entrypoint.handleOps([userOp], beneficiary, { gasLimit: 1e6 }).catch(rethrowError)
+    } catch (e: any) {
+      // failed to handleOp. use FailedOp to detect by
+      console.log(e)
     }
   }
 }
@@ -109,11 +135,12 @@ async function main (): Promise<void> {
 
   const opts = program.parse().opts()
   const provider = getDefaultProvider(opts.network) as JsonRpcProvider
-  
   let signer: Signer
   const deployFactory: boolean = opts.deployFactory
   let bundler: BundlerServer | undefined
   if (opts.selfBundler != null) {
+    console.log('starting bundler in-process')
+
     // todo: if node is geth, we need to fund our bundler's account:
     const signer = provider.getSigner()
 
@@ -149,12 +176,30 @@ async function main (): Promise<void> {
     throw new Error('must specify --mnemonic')
   }
 
+  // signer transfer 10 eth to WETH
+  const eth0 = await signer.getBalance()
+  console.log('eth0=', formatEther(eth0))
+
+  const paymaster = VerifyingPaymaster__factory.connect(GASLESS_PAYMASTER, signer)
+  // paymaster deposit 1 eth
+  console.log('paymaster owner:', await paymaster.owner())
+  console.log('paymaster signer:', await paymaster.verifyingSigner())
+
+  await paymaster.deposit({ value: parseEther('1') })
+  // await paymaster.addStake(1000, { value: parseEther('1') })
+  const deposit = await paymaster.getDeposit()
+  console.log('paymaster deposit=', formatEther(deposit))
+
   const accountOwner = new Wallet('0x'.padEnd(66, '7'))
 
-  // const index = Date.now()
-  const client = await new Runner(provider, opts.bundlerUrl, accountOwner).init(deployFactory ? signer : undefined)
-
+  const index = Date.now()
+  const client = await new Runner(provider, opts.bundlerUrl, accountOwner, opts.entryPoint, index).init(deployFactory ? signer : undefined)
   const addr = await client.getAddress()
+
+  await signer.sendTransaction({
+    to: addr,
+    value: parseEther('1')
+  })
 
   async function isDeployed (addr: string): Promise<boolean> {
     return await provider.getCode(addr).then(code => code !== '0x')
@@ -166,28 +211,18 @@ async function main (): Promise<void> {
 
   const bal = await getBalance(addr)
   console.log('account address', addr, 'deployed=', await isDeployed(addr), 'bal=', formatEther(bal))
-  // TODO: actual required val
-  const requiredBalance = parseEther('0.5')
-  if (bal.lt(requiredBalance.div(2))) {
-    console.log('funding account to', requiredBalance)
-    await signer.sendTransaction({
-      to: addr,
-      value: requiredBalance.sub(bal)
-    })
-  } else {
-    console.log('not funding account. balance is enough')
-  }
 
   const dest = addr
   const data = keccak256(Buffer.from('nonce()')).slice(0, 10)
   console.log('data=', data)
-  await client.runUserOp(dest, data)
+  await client.hdlUserOp(dest, data, signer)
   console.log('after run1')
+
   const bal1 = await getBalance(dest)
   console.log('account address', addr, 'deployed=', await isDeployed(addr), 'bal=', formatEther(bal1))
   // client.accountApi.overheads!.perUserOp = 30000
-  await client.runUserOp(dest, data)
-  console.log('after run2')
+  // await client.runUserOp(dest, data)
+  // console.log('after run2')
   await bundler?.stop()
 }
 

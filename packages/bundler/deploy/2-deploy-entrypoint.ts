@@ -1,9 +1,10 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { ethers } from 'hardhat'
+import { BigNumber } from 'ethers'
 import { DeterministicDeployer } from '@aa-lib/sdk'
-import { EntryPoint__factory, FixedOracle__factory, WETH__factory,
-  SimpleAccountFactory__factory, SimpleAccountForTokensFactory__factory, WETHPaymaster__factory, USDPaymaster__factory } from '@aa-lib/contracts'
+import { EntryPoint__factory, SimpleAccountFactory__factory, SimpleAccountForTokensFactory__factory, WETH__factory, USDToken__factory,
+  WETHPaymaster__factory, USDPaymaster__factory, VerifyingPaymaster__factory, FixedPaymaster__factory } from '@aa-lib/contracts'
 
 // deploy entrypoint - but only on debug network..
 const deployEP: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -20,33 +21,41 @@ const deployEP: DeployFunction = async function (hre: HardhatRuntimeEnvironment)
     process.exit(1)
   }
 
+  // deploy entrypoints
   await dep.deterministicDeploy(EntryPoint__factory.bytecode)
   console.log('Deployed EntryPoint at', epAddr)
 
-  // deploy oracle
-  const oracleAddr = await dep.deterministicDeploy(FixedOracle__factory.bytecode)
-  console.log('Deployed FixedOracle at', oracleAddr)
+  // deploy account factory
+  const accFactory = await dep.deterministicDeploy(new SimpleAccountFactory__factory(), 0, [epAddr])
+  console.log('Deployed SimpleAccountFactory at', accFactory)
+
+  // deploy account for token factory
+  const acctokFactory = await dep.deterministicDeploy(new SimpleAccountForTokensFactory__factory(), 0, [epAddr])
+  console.log('Deployed SimpleAccountForTokensFactory at', acctokFactory)
 
   // deploy weth
   const wethAddr = await dep.deterministicDeploy(WETH__factory.bytecode)
   console.log('Deployed WETH at', wethAddr)
 
-  // deploy account factory
-  const accFactory = await dep.deterministicDeploy(new SimpleAccountForTokensFactory__factory(), 0, [epAddr])
-  console.log('Deployed SimpleAccountForTokensFactory at', accFactory)
+  // 1. deploy weth paymaster
+  const wethPaymaster = await new WETHPaymaster__factory(ethers.provider.getSigner()).deploy(acctokFactory, epAddr, wethAddr)
+  console.log('Deployed WETHPaymaster at', wethPaymaster.address)
 
-  // 1. deploy paymaster
-  const factory = new WETHPaymaster__factory().connect(ethers.provider.getSigner())
-  const paymaster = await factory.deploy(accFactory, epAddr, wethAddr)
-  console.log('Deployed WETHPaymaster at', paymaster.address)
+  // deploy usd and oracle
+  const usdAddr = await dep.deterministicDeploy(new USDToken__factory(), 0, [BigNumber.from('100000000000000000000000000')])
+  console.log('Deployed USDToken at', usdAddr)
 
-  // deploy usdtoken
-  // const usdtAddr = await dep.deterministicDeploy(USDToken__factory.bytecode)
-  // console.log('Deployed USDT at', usdtAddr)
+  // 2. deploy usd paymaster
+  const usdPaymaster = await new USDPaymaster__factory(ethers.provider.getSigner()).deploy(acctokFactory, epAddr, usdAddr, usdAddr)
+  console.log('Deployed USDPaymaster at', usdPaymaster.address)
 
-  // 2. deploy paymaster
-  // const paymaster = await dep.deterministicDeploy(new USDPaymaster__factory(), 0, [factory, epAddr, usdtAddr, oracleAddr])
-  // console.log('Deployed USDPaymaster at', paymaster)
+  // 3. gasless (verified) paymaster
+  const verifiedPaymaster = await new VerifyingPaymaster__factory(ethers.provider.getSigner()).deploy(epAddr, ethers.provider.getSigner().getAddress())
+  console.log('Deployed VerifiedPaymaster at', verifiedPaymaster.address)
+
+  // 3. fixed create and tx fee paymaster
+  const fixedPaymaster = await new FixedPaymaster__factory(ethers.provider.getSigner()).deploy(acctokFactory, epAddr, usdAddr, 100000000, 1000000)
+  console.log('Deployed FixedPaymaster at', fixedPaymaster.address)
 }
 
 export default deployEP

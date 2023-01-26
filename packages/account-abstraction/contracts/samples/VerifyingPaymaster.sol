@@ -73,5 +73,4 @@ contract VerifyingPaymaster is BasePaymaster {
         // by the external service prior to signing it.
         return ("", 0);
     }
-
 }
