@@ -18,6 +18,8 @@
     "bundler": "yarn --cwd packages/bundler bundler",
     "runop": "yarn --cwd packages/bundler runop",
     "runopweth": "yarn --cwd packages/bundler runopweth",
+    "runopusdt": "yarn --cwd packages/bundler runopusdt",
+    "runopfixed": "yarn --cwd packages/bundler runopfixed",
     "runopgasless": "yarn --cwd packages/bundler runopgasless"
   },
   "bugs": {

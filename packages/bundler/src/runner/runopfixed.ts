@@ -7,23 +7,19 @@
 
 import { BigNumber, getDefaultProvider, Signer, Wallet } from 'ethers'
 import { JsonRpcProvider } from '@ethersproject/providers'
-import { formatEther, keccak256, parseEther } from 'ethers/lib/utils'
+import { formatEther, formatUnits, keccak256, parseEther, parseUnits } from 'ethers/lib/utils'
 import { Command } from 'commander'
 import { erc4337RuntimeVersion } from '@aa-lib/utils'
-import { WETH__factory, WETHPaymaster__factory, EntryPoint__factory } from '@aa-lib/contracts'
+import { ERC20__factory, FixedPaymaster__factory, EntryPoint__factory } from '@aa-lib/contracts'
 import { HttpRpcClient, SimpleAccountForTokensAPI, TokenPaymasterAPI } from '@aa-lib/sdk'
 import { runBundler } from '../runBundler'
 import { BundlerServer } from '../BundlerServer'
 import { parseExpectedGas } from './utils'
 
 const ENTRY_POINT = '0x1306b01bc3e4ad202612d3843387e94737673f53'
-const WETH = '0xfb970555c468b82cd55831d09bb4c7ee85188675'
-const USDT = '0x0165878A594ca255338adfa4d48449f69242Eb8F'
-const ACC_FACTORY = '0x17d2a828e552031d2063442cca4f4a1d1d0119e1'
 const ACCTOK_FACTORY = '0x705560872870af0225199eee070d807aa585c0ea'
-const WETH_PAYMASTER = '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707'
-const USD_PAYMASTER = '0xa513E6E4b8f2a923D98304ec87F64353C4D5C853'
-const GASLESS_PAYMASTER = '0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6'
+const ERC20 = '0xe5aa11a43e0b72cc2a2655b38070c1784201107a'
+const FIXED_PAYMASTER = '0x610178dA211FEF7D417bC0e6FeD39F05609AD788'
 const beneficiary = '0xd21934eD8eAf27a67f0A70042Af50A1D6d195E81'
 class Runner {
   bundlerProvider!: HttpRpcClient
@@ -53,19 +49,8 @@ class Runner {
   async init (deploymentSigner?: Signer): Promise<this> {
     const net = await this.provider.getNetwork()
     const chainId = net.chainId
-    // const dep = new DeterministicDeployer(this.provider)
-    // const accountDeployer = await dep.getDeterministicDeployAddress(new SimpleAccountForTokensFactory__factory(), 0, [this.entryPointAddress])
-    // // const accountDeployer = await new SimpleAccountForTokensFactory__factory(this.provider.getSigner()).deploy().then(d=>d.address)
-    // if (!await dep.isContractDeployed(accountDeployer)) {
-    //   if (deploymentSigner == null) {
-    //     console.log(`AccountDeployer not deployed at ${accountDeployer}. run with --deployFactory`)
-    //     process.exit(1)
-    //   }
-    //   const dep1 = new DeterministicDeployer(deploymentSigner.provider as any)
-    //   await dep1.deterministicDeploy(new SimpleAccountForTokensFactory__factory(), 0, [this.entryPointAddress, WETH, WETH_PAYMASTER])
-    // }
 
-    const paymasterAPI = new TokenPaymasterAPI(WETH_PAYMASTER)
+    const paymasterAPI = new TokenPaymasterAPI(FIXED_PAYMASTER)
     console.log('paymasterAPI', await paymasterAPI.getPaymasterAndData({}))
 
     this.bundlerProvider = new HttpRpcClient(this.bundlerUrl, this.entryPointAddress, chainId)
@@ -75,8 +60,8 @@ class Runner {
       factoryAddress: ACCTOK_FACTORY,
       paymasterAPI,
       owner: this.accountOwner,
-      token: WETH,
-      paymaster: WETH_PAYMASTER,
+      token: ERC20,
+      paymaster: FIXED_PAYMASTER,
       index: this.index,
       overheads: {
         // perUserOp: 100000
@@ -189,29 +174,19 @@ async function main (): Promise<void> {
     throw new Error('must specify --mnemonic')
   }
 
-  // signer transfer 10 eth to WETH
-  const eth0 = await signer.getBalance()
-  console.log('eth0=', formatEther(eth0))
+  // check USDT balance
+  const token = ERC20__factory.connect(ERC20, signer)
 
-  await signer.sendTransaction({
-    to: WETH,
-    value: parseEther('10')
-  })
+  await token.mint(parseEther('1000000'))
 
-  const eth1 = await signer.getBalance()
-  console.log('eth1=', formatEther(eth1))
+  const tokBal = await token.balanceOf(signer.getAddress())
+  console.log('token bal=', formatEther(tokBal))
 
-  // check WETH balance
-  const weth = WETH__factory.connect(WETH, signer)
-  const wethBal = await weth.balanceOf(signer.getAddress())
-  console.log('weth bal=', formatEther(wethBal))
-
-  const paymaster = WETHPaymaster__factory.connect(WETH_PAYMASTER, signer)
-  // paymaster deposit 1 eth
+  const paymaster = FixedPaymaster__factory.connect(FIXED_PAYMASTER, signer)
   console.log('paymaster owner:', await paymaster.owner())
 
+  // paymaster deposit 1 eth
   await paymaster.deposit({ value: parseEther('1') })
-  // await paymaster.addStake(1000, { value: parseEther('1') })
   const deposit = await paymaster.getDeposit()
   console.log('paymaster deposit=', formatEther(deposit))
 
@@ -221,7 +196,7 @@ async function main (): Promise<void> {
   const client = await new Runner(provider, opts.bundlerUrl, accountOwner, opts.entryPoint, index).init(deployFactory ? signer : undefined)
   const addr = await client.getAddress()
   // transfer 1 weth to addr
-  await weth.transfer(addr, parseEther('1'))
+  await token.transfer(addr, parseEther('100'))
 
   async function isDeployed (addr: string): Promise<boolean> {
     return await provider.getCode(addr).then(code => code !== '0x')
@@ -229,7 +204,7 @@ async function main (): Promise<void> {
 
   async function getBalance (addr: string): Promise<BigNumber> {
     // return await provider.getBalance(addr)
-    return await weth.balanceOf(addr)
+    return await token.balanceOf(addr)
   }
 
   const bal = await getBalance(addr)

@@ -1,7 +1,7 @@
 export { SimpleAccountAPI } from './SimpleAccountAPI'
 export { SimpleAccountForTokensAPI } from './SimpleAccountForTokensAPI'
 export { VerifiedPaymasterAPI } from './VerifiedPaymasterAPI'
-export { WETHPaymasterAPI } from './WETHPaymasterAPI'
+export { TokenPaymasterAPI } from './TokenPaymasterAPI'
 export { wrapProvider } from './Provider'
 export { ERC4337EthersSigner } from './ERC4337EthersSigner'
 export { ERC4337EthersProvider } from './ERC4337EthersProvider'

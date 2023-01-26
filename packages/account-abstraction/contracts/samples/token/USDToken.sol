@@ -14,6 +14,6 @@ contract USDToken is ERC20, IOracle {
     }
 
     function getTokenValueOfEth(uint256 ethOutput) external pure returns (uint256 tokenInput) {
-        return ethOutput / (10 ** 8);
+        return ethOutput * 1500 / (10 ** 10); // 8 - 18, est eth 1500 usd
     }
 }

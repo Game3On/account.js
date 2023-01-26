@@ -4,7 +4,7 @@ import { UserOperationStruct } from '@aa-lib/contracts'
 /**
  * an API to external a UserOperation with paymaster info
  */
-export class WETHPaymasterAPI extends BasePaymasterAPI {
+export class TokenPaymasterAPI extends BasePaymasterAPI {
   constructor (
     readonly paymaster: string
   ) {
