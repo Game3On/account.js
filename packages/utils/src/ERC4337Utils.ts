@@ -1,10 +1,7 @@
-import { defaultAbiCoder, hexConcat, hexlify, keccak256 } from 'ethers/lib/utils'
+import { defaultAbiCoder, hexlify, keccak256 } from 'ethers/lib/utils'
 import { UserOperationStruct } from '@aa-lib/contracts'
 import { abi as entryPointAbi } from '@aa-lib/contracts/artifacts/IEntryPoint.json'
 import { ethers } from 'ethers'
-import Debug from 'debug'
-
-const debug = Debug('aa.utils')
 
 // UserOperation is the first parameter of validateUseOp
 const validateUserOpMethod = 'simulateValidation'
