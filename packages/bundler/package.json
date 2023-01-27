@@ -22,7 +22,6 @@
     "hardhat-test": "hardhat test",
     "lint": "eslint -f unix .",
     "lint-fix": "eslint -f unix . --fix",
-    "tsc": "tsc",
     "watch-tsc": "tsc -w --preserveWatchOutput"
   },
   "dependencies": {

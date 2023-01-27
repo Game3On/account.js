@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "noEmit": true,
+    "strict": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "target": "ESNext"
+  },
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "docs"
+  ],
+  "include": [
+    "packages/**/*",
+    "./scripts/**/*"
+  ]
+}

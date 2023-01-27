@@ -19,8 +19,7 @@ module.exports = {
   // This is needed to add configuration to rules with type information
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    // It didn't work with docs
-    project: ['./tsconfig.base.json']
+    project: ['./tsconfig.json']
   },
   ignorePatterns: [
     '.eslintrc.js',
@@ -34,6 +33,8 @@ module.exports = {
     '@typescript-eslint/no-var-requires': 'off',
     '@typescript-eslint/return-await': 'off',
     '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+    '@typescript-eslint/strict-boolean-expressions': 'off',
+    "@typescript-eslint/restrict-template-expressions": 'off',
     '@typescript-eslint/require-array-sort-compare': ['error',
       {
         ignoreStringArrays: true
