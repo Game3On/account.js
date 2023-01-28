@@ -15,14 +15,14 @@
     "dev": "pnpm -r --filter='./packages/*' run dev",
     "build": "pnpm -r --filter='./packages/*' run build",
     "preprocess": "pnpm run clear && pnpm run compile && pnpm run dev",
-    "hardhat-node": "lerna run hardhat-node --stream --no-prefix --",
-    "hardhat-deploy": "lerna run hardhat-deploy --stream --no-prefix --",
-    "bundler": "yarn --cwd packages/bundler bundler",
-    "runop": "yarn --cwd packages/bundler runop",
-    "runopweth": "yarn --cwd packages/bundler runopweth",
-    "runopusdt": "yarn --cwd packages/bundler runopusdt",
-    "runopfixed": "yarn --cwd packages/bundler runopfixed",
-    "runopgasless": "yarn --cwd packages/bundler runopgasless"
+    "hardhat-node": "pnpm --filter='./packages/bundler' run hardhat-node",
+    "hardhat-deploy": "pnpm --filter='./packages/bundler' run hardhat-deploy",
+    "bundler": "pnpm --filter='./packages/bundler' run bundler",
+    "runop": "pnpm --filter='./packages/bundler' run runop",
+    "runopweth": "pnpm --filter='./packages/bundler' run runopweth",
+    "runopusdt": "pnpm --filter='./packages/bundler' run runopusdt",
+    "runopfixed": "pnpm --filter='./packages/bundler' run runopfixed",
+    "runopgasless": "pnpm --filter='./packages/bundler' run runopgasless"
   },
   "bugs": {
     "url": "https://github.com/Game3On/aa-lib/issues"
@@ -45,7 +45,6 @@
     "eslint-plugin-testing-library": "^5.9.1",
     "execa": "^6.1.0",
     "fs-extra": "^11.1.0",
-    "lerna": "^5.4.0",
     "prettier": "^2.8.3",
     "tsup": "^6.5.0",
     "typescript": "^4.9.4"
