@@ -1,1 +1,2 @@
-export { version as erc4337RuntimeVersion } from '../package.json'
+const { version } = require('../package.json')
+export const erc4337RuntimeVersion = version

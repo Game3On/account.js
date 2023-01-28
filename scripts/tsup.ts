@@ -6,6 +6,7 @@ import { execa } from 'execa'
 import type { Format, Options } from 'tsup'
 
 import path from 'path'
+import { cwd } from 'process'
 
 type GetConfig = Omit<
 Options,
@@ -16,6 +17,7 @@ Options,
 }
 
 const DEFAULT_FORMAT = (process.env.FORMAT as Format) ?? 'esm'
+
 export function getConfig ({ dev, ...options }: GetConfig): Options {
   if (!options.entry?.length) throw new Error('entry is required')
   const entry: string[] = options.entry ?? []
@@ -30,7 +32,7 @@ export function getConfig ({ dev, ...options }: GetConfig): Options {
       format: [DEFAULT_FORMAT],
       silent: true,
       async onSuccess () {
-      // remove all files in dist
+        // remove all files in dist
         await fs.emptyDir('dist')
         // symlink files and type definitions
         for (const file of entry) {
@@ -60,13 +62,37 @@ export function getConfig ({ dev, ...options }: GetConfig): Options {
   return {
     bundle: true,
     clean: true,
-    dts: true,
+    // dts: true,
     format: [DEFAULT_FORMAT],
     splitting: true,
     target: 'es2021',
     async onSuccess () {
       if (typeof options.onSuccess === 'function') await options.onSuccess()
       else if (typeof options.onSuccess === 'string') execa(options.onSuccess)
+
+      // Execute tsc to compile type sourcemap, execute it from the package root
+      await execa('tsc')
+      // if package type is not module, rename .mjs to .js
+      const packageJson = await fs.readJSON('package.json')
+      if (packageJson.type !== 'module') {
+        for (const file of entry) {
+          // rename .mjs to .js
+          const distSourceFile = file
+            .replace(file, file.replace('src/', 'dist/'))
+            .replace(/\.ts$/, '.js')
+          await fs.rename(
+            distSourceFile.replace(/\.js$/, '.mjs'),
+            distSourceFile
+          )
+          // rename .mjs.map to .js.map
+          if (options.sourcemap) {
+            await fs.rename(
+              distSourceFile.replace(/\.js$/, '.mjs.map'),
+              distSourceFile.replace(/\.js$/, '.js.map')
+            )
+          }
+        }
+      }
 
       const exports = await generateExports(entry)
       try {
