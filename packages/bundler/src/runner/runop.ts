@@ -51,6 +51,8 @@ class Runner {
     // const accountDeployer = await new SimpleAccountFactory__factory(this.provider.getSigner()).deploy().then(d=>d.address)
     if (!await dep.isContractDeployed(accountDeployer)) {
       if (deploymentSigner == null) {
+        // eslint don't recognize this is a template string
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         console.log(`AccountDeployer not deployed at ${accountDeployer}. run with --deployFactory`)
         process.exit(1)
       }
