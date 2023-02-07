@@ -90,6 +90,8 @@ export class SimpleAccountAPI extends BaseAccountAPI {
    */
   async encodeExecute (target: string, value: BigNumberish, data: string): Promise<string> {
     const accountContract = await this._getAccountContract()
+    console.log('target', target, 'value', value, 'data', data)
+
     return accountContract.interface.encodeFunctionData(
       'execute',
       [

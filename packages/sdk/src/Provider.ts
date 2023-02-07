@@ -52,15 +52,10 @@ export async function wrapProvider (
 export async function wrapPaymasterProvider (
   originalProvider: JsonRpcProvider,
   config: ClientConfig,
-  originalSigner: Signer = originalProvider.getSigner(),
+  originalSigner: Signer,
   token: string, paymaster: string
 ): Promise<ERC4337EthersProvider> {
   const entryPoint = EntryPoint__factory.connect(config.entryPointAddress, originalProvider)
-  // Initial SimpleAccount instance is not deployed and exists just for the interface
-  const detDeployer = new DeterministicDeployer(originalProvider)
-  const SimpleAccountFactory = await detDeployer.deterministicDeploy(new SimpleAccountForTokensFactory__factory(), 0, [entryPoint.address])
-
-  // paymaster
 
   const smartAccountAPI = new SimpleAccountForTokensAPI({
     provider: originalProvider,
@@ -68,7 +63,7 @@ export async function wrapPaymasterProvider (
     owner: originalSigner,
     token,
     paymaster,
-    factoryAddress: SimpleAccountFactory,
+    factoryAddress: config.accountFacotry,
     paymasterAPI: config.paymasterAPI
   })
   debug('config=', config)
@@ -84,4 +79,3 @@ export async function wrapPaymasterProvider (
     smartAccountAPI
   ).init()
 }
-

@@ -12,7 +12,7 @@ import { formatEther, keccak256, parseEther } from 'ethers/lib/utils'
 import { Command } from 'commander'
 import { erc4337RuntimeVersion } from '@aa-lib/utils'
 import fs from 'fs'
-import { DeterministicDeployer, HttpRpcClient, SimpleAccountAPI } from '@aa-lib/sdk'
+import { ERC4337EthersProvider, ClientConfig, wrapProvider } from '@aa-lib/sdk'
 import { runBundler } from '../runBundler'
 import { BundlerServer } from '../BundlerServer'
 import { parseExpectedGas } from './utils'
@@ -20,8 +20,7 @@ import { parseExpectedGas } from './utils'
 const ENTRY_POINT = '0x1306b01bc3e4ad202612d3843387e94737673f53'
 
 class Runner {
-  bundlerProvider!: HttpRpcClient
-  accountApi!: SimpleAccountAPI
+  aaProvider!: ERC4337EthersProvider
 
   /**
    *
@@ -41,51 +40,25 @@ class Runner {
   }
 
   async getAddress (): Promise<string> {
-    return await this.accountApi.getCounterFactualAddress()
+    return await this.aaProvider.getSenderAccountAddress()
   }
 
   async init (deploymentSigner?: Signer): Promise<this> {
-    const net = await this.provider.getNetwork()
-    const chainId = net.chainId
-    const dep = new DeterministicDeployer(this.provider)
-    const accountDeployer = await dep.getDeterministicDeployAddress(new SimpleAccountFactory__factory(), 0, [this.entryPointAddress])
-    // const accountDeployer = await new SimpleAccountFactory__factory(this.provider.getSigner()).deploy().then(d=>d.address)
-    if (!await dep.isContractDeployed(accountDeployer)) {
-      if (deploymentSigner == null) {
-        console.log(`AccountDeployer not deployed at ${accountDeployer}. run with --deployFactory`)
-        process.exit(1)
-      }
-      const dep1 = new DeterministicDeployer(deploymentSigner.provider as any)
-      await dep1.deterministicDeploy(new SimpleAccountFactory__factory(), 0, [this.entryPointAddress])
+    const config: ClientConfig = {
+      bundlerUrl: this.bundlerUrl,
+      entryPointAddress: this.entryPointAddress
     }
-    this.bundlerProvider = new HttpRpcClient(this.bundlerUrl, this.entryPointAddress, chainId)
-    this.accountApi = new SimpleAccountAPI({
-      provider: this.provider,
-      entryPointAddress: this.entryPointAddress,
-      factoryAddress: accountDeployer,
-      owner: this.accountOwner,
-      index: this.index,
-      overheads: {
-        // perUserOp: 100000
-      }
-    })
+    this.aaProvider = await wrapProvider(this.provider, config, this.accountOwner)
     return this
   }
 
-  async runUserOp (target: string, data: string): Promise<void> {
-    const userOp = await this.accountApi.createSignedUserOp({
-      target,
-      data
+  async transferETH (target: string, ether: string): Promise<void> {
+    await this.aaProvider.getSigner().sendTransaction({
+      to: target,
+      data: '0x',
+      value: parseEther(ether),
+      gasLimit: 100000
     })
-    console.log(userOp)
-
-    try {
-      const userOpHash = await this.bundlerProvider.sendUserOpToBundler(userOp)
-      const txid = await this.accountApi.getUserOpReceipt(userOpHash)
-      console.log('reqId', userOpHash, 'txid=', txid)
-    } catch (e: any) {
-      throw parseExpectedGas(e)
-    }
   }
 }
 
@@ -127,22 +100,19 @@ async function main (): Promise<void> {
     bundler = await runBundler(argv)
     await bundler.asyncStart()
   }
-  if (opts.mnemonic != null) {
-    signer = Wallet.fromMnemonic(fs.readFileSync(opts.mnemonic, 'ascii').trim()).connect(provider)
-  } else {
-    try {
-      const accounts = await provider.listAccounts()
-      if (accounts.length === 0) {
-        console.log('fatal: no account. use --mnemonic (needed to fund account)')
-        process.exit(1)
-      }
-      // for hardhat/node, use account[0]
-      signer = provider.getSigner()
-      // deployFactory = true
-    } catch (e) {
-      throw new Error('must specify --mnemonic')
+  try {
+    const accounts = await provider.listAccounts()
+    if (accounts.length === 0) {
+      console.log('fatal: no account. use --mnemonic (needed to fund account)')
+      process.exit(1)
     }
+    // for hardhat/node, use account[0]
+    signer = provider.getSigner()
+    // deployFactory = true
+  } catch (e) {
+    throw new Error('must specify --mnemonic')
   }
+
   const accountOwner = new Wallet('0x'.padEnd(66, '7'))
 
   const index = Date.now()
@@ -160,28 +130,31 @@ async function main (): Promise<void> {
 
   const bal = await getBalance(addr)
   console.log('account address', addr, 'deployed=', await isDeployed(addr), 'bal=', formatEther(bal))
-  // TODO: actual required val
+  const ownerAddr = await accountOwner.getAddress()
+  let ownerBal = await getBalance(ownerAddr)
+  console.log('owner', ownerAddr, 'bal=', formatEther(ownerBal))
+
   const requiredBalance = parseEther('0.5')
-  if (bal.lt(requiredBalance.div(2))) {
-    console.log('funding account to', requiredBalance)
-    await signer.sendTransaction({
-      to: addr,
-      value: requiredBalance.sub(bal)
-    })
-  } else {
-    console.log('not funding account. balance is enough')
-  }
+  console.log('funding account to', requiredBalance)
+  await signer.sendTransaction({
+    to: addr,
+    value: requiredBalance.sub(bal)
+  })
 
   const dest = addr
-  const data = keccak256(Buffer.from('nonce()')).slice(0, 10)
-  console.log('data=', data)
-  await client.runUserOp(dest, data)
+  await client.transferETH(ownerAddr, '0.1')
   console.log('after run1')
   const bal1 = await getBalance(dest)
   console.log('account address', addr, 'deployed=', await isDeployed(addr), 'bal=', formatEther(bal1))
+  ownerBal = await getBalance(ownerAddr)
+  console.log('owner', ownerAddr, 'bal=', formatEther(ownerBal))
   // client.accountApi.overheads!.perUserOp = 30000
-  await client.runUserOp(dest, data)
+  await client.transferETH(ownerAddr, '0.1')
   console.log('after run2')
+  const bal2 = await getBalance(dest)
+  console.log('account address', addr, 'deployed=', await isDeployed(addr), 'bal=', formatEther(bal2))
+  ownerBal = await getBalance(ownerAddr)
+  console.log('owner', ownerAddr, 'bal=', formatEther(ownerBal))
   await bundler?.stop()
 }
 

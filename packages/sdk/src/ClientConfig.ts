@@ -19,6 +19,10 @@ export interface ClientConfig {
    */
   walletAddres?: string
   /**
+   * if set, use this pre-deployed factory.
+   */
+  accountFacotry?: string
+  /**
    * if set, call just before signing.
    */
   paymasterAPI?: BasePaymasterAPI
