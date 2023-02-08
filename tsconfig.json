@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "declaration": true,
-    "noEmit": true,
+    "declaration": false,
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "target": "ESNext"
+    "sourceMap": true,
+    "target": "es2022"
   },
   "exclude": [
     "**/node_modules/**",
