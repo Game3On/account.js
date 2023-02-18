@@ -42,7 +42,6 @@ export class ERC4337EthersProvider extends BaseProvider {
     // await this.httpRpcClient.validateChainId()
     this.initializedBlockNumber = await this.originalProvider.getBlockNumber()
     await this.smartAccountAPI.init()
-    // await this.signer.init()
     return this
   }
 
