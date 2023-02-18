@@ -49,6 +49,33 @@ export async function wrapProvider (
   ).init()
 }
 
+export async function wrapSimpleProvider (
+  originalProvider: JsonRpcProvider,
+  config: ClientConfig,
+  originalSigner: Signer = originalProvider.getSigner()
+): Promise<ERC4337EthersProvider> {
+  const entryPoint = EntryPoint__factory.connect(config.entryPointAddress, originalProvider)
+  const smartAccountAPI = new SimpleAccountAPI({
+    provider: originalProvider,
+    entryPointAddress: entryPoint.address,
+    owner: originalSigner,
+    factoryAddress: config.accountFacotry,
+    paymasterAPI: config.paymasterAPI
+  })
+  debug('config=', config)
+  const chainId = await originalProvider.getNetwork().then(net => net.chainId)
+  const httpRpcClient = new HttpRpcClient(config.bundlerUrl, config.entryPointAddress, chainId)
+  return await new ERC4337EthersProvider(
+    chainId,
+    config,
+    originalSigner,
+    originalProvider,
+    httpRpcClient,
+    entryPoint,
+    smartAccountAPI
+  ).init()
+}
+
 export async function wrapPaymasterProvider (
   originalProvider: JsonRpcProvider,
   config: ClientConfig,
