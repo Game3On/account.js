@@ -7,10 +7,8 @@
     "lint-fix": "eslint -f unix . --fix",
     "test": "hardhat test",
     "hardhat-test": "hardhat test",
-    "build": "tsc --project tsconfig.json",
-    "build-all": "pnpm clear && pnpm build",
-    "dev": "tsc --project tsconfig.dev.json",
-    "dev-all": "pnpm clear && pnpm dev"
+    "build": "pnpm clear && tsc --project tsconfig.json",
+    "dev": "pnpm clear && tsc --project tsconfig.dev.json"
   },
   "dependencies": {
     "@aa-lib/contracts": "workspace:*",

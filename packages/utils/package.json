@@ -5,10 +5,8 @@
     "clear": "rm -rf dist artifacts cache src/types",
     "hardhat-compile": "hardhat compile",
     "lint-fix": "eslint -f unix . --fix",
-    "build": "tsc --project tsconfig.json",
-    "build-all": "pnpm clear && pnpm hardhat-compile && pnpm build",
-    "dev": "tsc --project tsconfig.dev.json",
-    "dev-all": "pnpm clear && pnpm hardhat-compile && pnpm dev"
+    "build": "pnpm clear && pnpm hardhat-compile && tsc --project tsconfig.json",
+    "dev": "pnpm clear && pnpm hardhat-compile && tsc --project tsconfig.dev.json"
   },
   "dependencies": {
     "@aa-lib/contracts": "workspace:*",

@@ -16,10 +16,7 @@ export class VerifiedPaymasterAPI extends BasePaymasterAPI {
 
   async getPaymasterAndData (userOp: UserOperationStruct): Promise<string | undefined> {
     const hash = await this.verifyOp(userOp)
-    console.log('hash', hash)
-
     const sig = await this.signer.signMessage(arrayify(hash))
-    console.log('sig', sig, 'signer', await this.signer.getAddress())
     return this.paymaster + sig.substring(2)
   }
 

@@ -118,6 +118,6 @@ export class ERC4337EthersProvider extends BaseProvider {
   }
 
   async detectNetwork (): Promise<Network> {
-    return (this.originalProvider as any).detectNetwork()
+    return this.originalProvider.detectNetwork()
   }
 }

@@ -15,7 +15,9 @@ export function tostr (s: BigNumberish): string {
 
 export function requireCond (cond: boolean, msg: string, code?: number, data: any = undefined): void {
   if (!cond) {
-    throw new RpcError(msg, code, data)
+    const error = new RpcError(msg, code, data)
+    if (Error.captureStackTrace) Error.captureStackTrace(error, requireCond)
+    throw error
   }
 }
 

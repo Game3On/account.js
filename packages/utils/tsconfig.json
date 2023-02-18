@@ -12,6 +12,7 @@
     "strict": true,
     "composite": true,
     "allowJs": true,
+    "skipLibCheck": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "noImplicitThis": true,

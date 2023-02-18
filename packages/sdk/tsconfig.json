@@ -8,6 +8,7 @@
     "composite": true,
     "allowJs": true,
     "resolveJsonModule": true,
+    "skipLibCheck": true,
     "moduleResolution": "node",
     "noImplicitThis": true,
     "alwaysStrict": true,
@@ -19,5 +20,9 @@
   },
   "include": [
     "./**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
   ]
 }
