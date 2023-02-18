@@ -1,25 +1,25 @@
 {
   "include": [
-    "./**/*.ts"
+    "./**/*.ts",
+    "./package.json"
   ],
   "compilerOptions": {
     "outDir": "dist",
-    "declarationDir": "./dist",
-    "target": "es2020",
+    "target": "es2017",
     "module": "commonjs",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "composite": true,
     "allowJs": true,
+    "skipLibCheck": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "noImplicitThis": true,
-    "skipLibCheck": true,
     "alwaysStrict": true,
     "declaration": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "sourceMap": true
+    "sourceMap": true,
   }
 }

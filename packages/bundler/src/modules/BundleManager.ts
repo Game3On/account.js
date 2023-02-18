@@ -5,9 +5,9 @@ import { BigNumber, BigNumberish } from 'ethers'
 import { getAddr, UserOperation } from './moduleUtils'
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers'
 import Debug from 'debug'
-import { ReputationManager, ReputationStatus } from './ReputationManager'
 import { AddressZero } from '@aa-lib/utils'
 import { Mutex } from 'async-mutex'
+import { ReputationManager, ReputationStatus } from './ReputationManager'
 
 const debug = Debug('aa.cron')
 
