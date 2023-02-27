@@ -1,6 +1,9 @@
 import { JsonRpcProvider } from '@ethersproject/providers'
 
-import { EntryPoint__factory, SimpleAccountFactory__factory, SimpleAccountForTokensFactory__factory } from '@aa-lib/contracts'
+import {
+  EntryPoint__factory,
+  SimpleAccountFactory__factory
+} from '@aa-lib/contracts'
 
 import { ClientConfig } from './ClientConfig'
 import { SimpleAccountAPI } from './SimpleAccountAPI'
@@ -24,10 +27,17 @@ export async function wrapProvider (
   config: ClientConfig,
   originalSigner: Signer = originalProvider.getSigner()
 ): Promise<ERC4337EthersProvider> {
-  const entryPoint = EntryPoint__factory.connect(config.entryPointAddress, originalProvider)
+  const entryPoint = EntryPoint__factory.connect(
+    config.entryPointAddress,
+    originalProvider
+  )
   // Initial SimpleAccount instance is not deployed and exists just for the interface
   const detDeployer = new DeterministicDeployer(originalProvider)
-  const SimpleAccountFactory = await detDeployer.deterministicDeploy(new SimpleAccountFactory__factory(), 0, [entryPoint.address])
+  const SimpleAccountFactory = await detDeployer.deterministicDeploy(
+    new SimpleAccountFactory__factory(),
+    0,
+    [entryPoint.address]
+  )
   const smartAccountAPI = new SimpleAccountAPI({
     provider: originalProvider,
     entryPointAddress: entryPoint.address,
@@ -36,8 +46,12 @@ export async function wrapProvider (
     paymasterAPI: config.paymasterAPI
   })
   debug('config=', config)
-  const chainId = await originalProvider.getNetwork().then(net => net.chainId)
-  const httpRpcClient = new HttpRpcClient(config.bundlerUrl, config.entryPointAddress, chainId)
+  const chainId = await originalProvider.getNetwork().then((net) => net.chainId)
+  const httpRpcClient = new HttpRpcClient(
+    config.bundlerUrl,
+    config.entryPointAddress,
+    chainId
+  )
   return await new ERC4337EthersProvider(
     chainId,
     config,
@@ -54,7 +68,10 @@ export async function wrapSimpleProvider (
   config: ClientConfig,
   originalSigner: Signer = originalProvider.getSigner()
 ): Promise<ERC4337EthersProvider> {
-  const entryPoint = EntryPoint__factory.connect(config.entryPointAddress, originalProvider)
+  const entryPoint = EntryPoint__factory.connect(
+    config.entryPointAddress,
+    originalProvider
+  )
   const smartAccountAPI = new SimpleAccountAPI({
     provider: originalProvider,
     entryPointAddress: entryPoint.address,
@@ -63,8 +80,12 @@ export async function wrapSimpleProvider (
     paymasterAPI: config.paymasterAPI
   })
   debug('config=', config)
-  const chainId = await originalProvider.getNetwork().then(net => net.chainId)
-  const httpRpcClient = new HttpRpcClient(config.bundlerUrl, config.entryPointAddress, chainId)
+  const chainId = await originalProvider.getNetwork().then((net) => net.chainId)
+  const httpRpcClient = new HttpRpcClient(
+    config.bundlerUrl,
+    config.entryPointAddress,
+    chainId
+  )
   return await new ERC4337EthersProvider(
     chainId,
     config,
@@ -80,10 +101,13 @@ export async function wrapPaymasterProvider (
   originalProvider: JsonRpcProvider,
   config: ClientConfig,
   originalSigner: Signer,
-  token: string, paymaster: string
+  token: string,
+  paymaster: string
 ): Promise<ERC4337EthersProvider> {
-  const entryPoint = EntryPoint__factory.connect(config.entryPointAddress, originalProvider)
-
+  const entryPoint = EntryPoint__factory.connect(
+    config.entryPointAddress,
+    originalProvider
+  )
   const smartAccountAPI = new SimpleAccountForTokensAPI({
     provider: originalProvider,
     entryPointAddress: entryPoint.address,
@@ -94,8 +118,12 @@ export async function wrapPaymasterProvider (
     paymasterAPI: config.paymasterAPI
   })
   debug('config=', config)
-  const chainId = await originalProvider.getNetwork().then(net => net.chainId)
-  const httpRpcClient = new HttpRpcClient(config.bundlerUrl, config.entryPointAddress, chainId)
+  const chainId = await originalProvider.getNetwork().then((net) => net.chainId)
+  const httpRpcClient = new HttpRpcClient(
+    config.bundlerUrl,
+    config.entryPointAddress,
+    chainId
+  )
   return await new ERC4337EthersProvider(
     chainId,
     config,

@@ -32,6 +32,14 @@ export class ERC4337EthersSigner extends Signer {
   async sendTransaction (
     transaction: Deferrable<TransactionRequest>
   ): Promise<TransactionResponse> {
+    // Set gas properties to 0 in case `estimateGas` throws error when account has no ethers
+    if (transaction.maxFeePerGas ?? transaction.maxPriorityFeePerGas) {
+      transaction.maxFeePerGas = 0
+      transaction.maxPriorityFeePerGas = 0
+    } else {
+      transaction.gasPrice = 0
+    }
+
     const tx: TransactionRequest = await this.populateTransaction(transaction)
     await this.verifyAllNecessaryFields(tx)
 
@@ -39,9 +47,10 @@ export class ERC4337EthersSigner extends Signer {
       target: tx.to ?? '',
       data: tx.data?.toString() ?? '0x',
       value: tx.value,
-      gasLimit: tx.gasLimit
+      gasLimit: tx.gasLimit,
+      maxFeePerGas: tx.maxFeePerGas,
+      maxPriorityFeePerGas: tx.maxPriorityFeePerGas
     })
-    console.log(userOperation)
     const transactionResponse =
       await this.erc4337provider.constructUserOpTransactionResponse(
         userOperation
@@ -91,7 +100,7 @@ export class ERC4337EthersSigner extends Signer {
     }
   }
 
-  connect (provider: Provider): Signer {
+  connect (_: Provider): Signer {
     throw new Error('changing providers is not supported')
   }
 
@@ -107,13 +116,13 @@ export class ERC4337EthersSigner extends Signer {
   }
 
   async signTransaction (
-    transaction: Deferrable<TransactionRequest>
+    _: Deferrable<TransactionRequest>
   ): Promise<string> {
     throw new Error('not implemented')
   }
 
   async signUserOperation (userOperation: UserOperationStruct): Promise<string> {
     const message = await this.smartAccountAPI.getUserOpHash(userOperation)
-    return await this.originalSigner.signMessage(message)
+    return await this.signMessage(message)
   }
 }
