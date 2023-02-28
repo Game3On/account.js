@@ -1,5 +1,5 @@
 {
-  "name": "@aa-lib/bundler",
+  "name": "@accountjs/bundler",
   "version": "0.1.0",
   "private": true,
   "files": [
@@ -25,9 +25,11 @@
     "watch-tsc": "tsc -w --preserveWatchOutput"
   },
   "dependencies": {
-    "@aa-lib/contracts": "workspace:*",
-    "@aa-lib/sdk": "workspace:*",
-    "@aa-lib/utils": "workspace:*",
+    "@account-abstraction/contracts": "^0.5.0",
+    "@account-abstraction/utils": "^0.5.0",
+    "@accountjs/contracts": "workspace:*",
+    "@accountjs/sdk": "workspace:*",
+    "@accountjs/utils": "workspace:*",
     "@ethersproject/abi": "^5.7.0",
     "@ethersproject/properties": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",

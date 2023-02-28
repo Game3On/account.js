@@ -17,7 +17,12 @@ type LogTracerFunc = () => LogTracer
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export async function debug_traceCall (provider: JsonRpcProvider, tx: Deferrable<TransactionRequest>, options: TraceOptions): Promise<TraceResult | any> {
   const tx1 = await resolveProperties(tx)
-  const ret = await provider.send('debug_traceCall', [tx1, 'latest', tracer2string(options)])
+  const traceOptions = tracer2string(options)
+  const ret = await provider.send('debug_traceCall', [tx1, 'latest', traceOptions]).catch(e => {
+    console.log('ex=', e.message)
+    console.log('tracer=', traceOptions.tracer?.toString().split('\n').map((line, index) => `${index + 1}: ${line}`).join('\n'))
+    throw e
+  })
   // return applyTracer(ret, options)
   return ret
 }
@@ -50,7 +55,13 @@ export function getTracerBodyString (func: LogTracerFunc): string {
   if (match == null) {
     throw new Error('Not a simple method returning value')
   }
-  return match[1]
+  let ret = match[1]
+  ret = ret
+    // .replace(/\/\/.*\n/g,'\n')
+    // .replace(/\n\s*\n/g, '\n')
+    .replace(/\b(?:const|let)\b/g, '')
+  // console.log('== tracer source',ret.split('\n').map((line,index)=>`${index}: ${line}`).join('\n'))
+  return ret
 }
 
 function tracer2string (options: TraceOptions): TraceOptions {

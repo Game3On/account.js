@@ -8,7 +8,12 @@ import { LogCallFrame, LogContext, LogDb, LogFrameResult, LogStep, LogTracer } f
 // functions available in a context of geth tracer
 declare function toHex (a: any): string
 
+declare function toWord (a: any): string
+
 declare function toAddress (a: any): string
+
+declare function isPrecompiled (addr: any): boolean
+
 /**
  * return type of our BundlerCollectorTracer.
  * collect access and opcodes, split into "levels" based on NUMBER opcode
@@ -42,6 +47,7 @@ export interface ExitInfo {
   gasUsed: number
   data: string
 }
+
 export interface NumberLevelInfo {
   opcodes: { [opcode: string]: number }
   access: { [address: string]: AccessInfo }
@@ -50,7 +56,9 @@ export interface NumberLevelInfo {
 }
 
 export interface AccessInfo {
-  reads: { [slot: string]: number }
+  // slot value, just prior this operation
+  reads: { [slot: string]: string }
+  // count of writes.
   writes: { [slot: string]: number }
 }
 
@@ -92,7 +100,7 @@ export function bundlerCollectorTracer (): BundlerCollectorTracer {
     numberCounter: 0,
 
     fault (log: LogStep, db: LogDb): void {
-      this.debug.push(`fault depth=${log.getDepth()} gas=${log.getGas()} cost=${log.getCost()} err=${log.getError()}`)
+      this.debug.push('fault depth=', log.getDepth(), ' gas=', log.getGas(), ' cost=', log.getCost(), ' err=', log.getError())
     },
 
     result (ctx: LogContext, db: LogDb): BundlerCollectorReturn {
@@ -106,7 +114,7 @@ export function bundlerCollectorTracer (): BundlerCollectorTracer {
     },
 
     enter (frame: LogCallFrame): void {
-      this.debug.push(`enter gas=${frame.getGas()} type=${frame.getType()} to=${toHex(frame.getTo())} in=${toHex(frame.getInput()).slice(0, 500)}`)
+      // this.debug.push('enter gas=', frame.getGas(), ' type=', frame.getType(), ' to=', toHex(frame.getTo()), ' in=', toHex(frame.getInput()).slice(0, 500))
       this.calls.push({
         type: frame.getType(),
         from: toHex(frame.getFrom()),
@@ -142,12 +150,22 @@ export function bundlerCollectorTracer (): BundlerCollectorTracer {
           const ofs = parseInt(log.stack.peek(0).toString())
           const len = parseInt(log.stack.peek(1).toString())
           const data = toHex(log.memory.slice(ofs, ofs + len)).slice(0, 1000)
-          this.debug.push(opcode + ' ' + data)
+          // this.debug.push(opcode + ' ' + data)
           this.calls.push({
             type: opcode,
             gasUsed: 0,
             data
           })
+        }
+      }
+
+      if (opcode.match(/^(EXT.*|CALL|CALLCODE|DELEGATECALL|STATICCALL)$/) != null) {
+        // this.debug.push('op=' + opcode + ' last=' + this.lastOp + ' stacksize=' + log.stack.length())
+        const idx = opcode.startsWith('EXT') ? 0 : 1
+        const addr = toAddress(log.stack.peek(idx).toString(16))
+        const addrHex = toHex(addr)
+        if ((this.currentLevel.contractSize[addrHex] ?? 0) === 0 && !isPrecompiled(addr)) {
+          this.currentLevel.contractSize[addrHex] = db.getCode(addr).length
         }
       }
 
@@ -175,28 +193,30 @@ export function bundlerCollectorTracer (): BundlerCollectorTracer {
           this.countSlot(this.currentLevel.opcodes, opcode)
         }
       }
-      if (opcode.match(/^(EXT.*|CALL|CALLCODE|DELEGATECALL|STATICCALL|CREATE2)$/) != null) {
-        // this.debug.push('op=' + opcode + ' last=' + this.lastOp + ' stacksize=' + log.stack.length())
-        const idx = opcode.startsWith('EXT') ? 0 : 1
-        const addr = toAddress(log.stack.peek(idx).toString(16))
-        const addrHex = toHex(addr)
-        if (this.currentLevel.contractSize[addrHex] == null) {
-          this.currentLevel.contractSize[addrHex] = db.getCode(addr).length
-        }
-      }
       this.lastOp = opcode
 
       if (opcode === 'SLOAD' || opcode === 'SSTORE') {
-        const slot = log.stack.peek(0).toString(16)
-        const addr = toHex(log.contract.getAddress())
-        let access
-        if ((access = this.currentLevel.access[addr]) == null) {
-          this.currentLevel.access[addr] = access = {
+        const slot = toWord(log.stack.peek(0).toString(16))
+        const slotHex = toHex(slot)
+        const addr = log.contract.getAddress()
+        const addrHex = toHex(addr)
+        let access = this.currentLevel.access[addrHex] as any
+        if (access == null) {
+          access = {
             reads: {},
             writes: {}
           }
+          this.currentLevel.access[addrHex] = access
         }
-        this.countSlot(opcode === 'SLOAD' ? access.reads : access.writes, slot)
+        if (opcode === 'SLOAD') {
+          // read slot values before this UserOp was created
+          // (so saving it if it was written before the first read)
+          if (access.reads[slotHex] == null && access.writes[slotHex] == null) {
+            access.reads[slotHex] = toHex(db.getState(addr, slot))
+          }
+        } else {
+          this.countSlot(access.writes, slotHex)
+        }
       }
 
       if (opcode === 'KECCAK256') {

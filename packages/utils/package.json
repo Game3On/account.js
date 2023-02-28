@@ -1,6 +1,6 @@
 {
-  "name": "@aa-lib/utils",
-  "version": "0.1.5",
+  "name": "@accountjs/utils",
+  "version": "0.2.0",
   "scripts": {
     "clear": "rm -rf dist artifacts cache src/types",
     "hardhat-compile": "hardhat compile",
@@ -9,7 +9,8 @@
     "dev": "pnpm clear && pnpm hardhat-compile && tsc --project tsconfig.dev.json"
   },
   "dependencies": {
-    "@aa-lib/contracts": "workspace:*",
+    "@account-abstraction/contracts": "^0.5.0",
+    "@accountjs/contracts": "workspace:*",
     "@ethersproject/abi": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
     "@openzeppelin/contracts": "^4.8.1",

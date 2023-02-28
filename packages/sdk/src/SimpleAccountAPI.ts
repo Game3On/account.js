@@ -3,7 +3,7 @@ import {
   SimpleAccount,
   SimpleAccount__factory, SimpleAccountFactory,
   SimpleAccountFactory__factory
-} from '@aa-lib/contracts'
+} from '@account-abstraction/contracts'
 
 import { arrayify, hexConcat } from 'ethers/lib/utils'
 import { Signer } from '@ethersproject/abstract-signer'
@@ -90,8 +90,6 @@ export class SimpleAccountAPI extends BaseAccountAPI {
    */
   async encodeExecute (target: string, value: BigNumberish, data: string): Promise<string> {
     const accountContract = await this._getAccountContract()
-    console.log('target', target, 'value', value, 'data', data)
-
     return accountContract.interface.encodeFunctionData(
       'execute',
       [

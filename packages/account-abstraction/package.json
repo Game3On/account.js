@@ -1,5 +1,5 @@
 {
-  "name": "accountabstraction",
+  "name": "@accountjs/contracts",
   "version": "0.1.0",
   "description": "",
   "scripts": {

@@ -1,5 +1,5 @@
 {
-  "name": "@aa-lib/contracts",
+  "name": "@accountjs/contracts",
   "description": "Account Abstraction (EIP 4337) contracts",
   "version": "0.1.0",
   "files": [

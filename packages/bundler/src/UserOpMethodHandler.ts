@@ -1,17 +1,17 @@
-import { BigNumber, BigNumberish, Wallet } from 'ethers'
-import { JsonRpcSigner, Log, Provider } from '@ethersproject/providers'
+import { BigNumber, BigNumberish, Signer } from 'ethers'
+import { Log, Provider } from '@ethersproject/providers'
 
 import { BundlerConfig } from './BundlerConfig'
 import { resolveProperties } from 'ethers/lib/utils'
-import { deepHexlify } from '@aa-lib/utils'
-import { UserOperationStruct, EntryPoint } from '@aa-lib/contracts'
-import { UserOperationEventEvent } from '@aa-lib/contracts/types/EntryPoint'
-import { calcPreVerificationGas } from '@aa-lib/sdk'
-import { requireCond, RpcError } from './utils'
-import { ExecutionErrors, ExecutionManager } from './modules/ExecutionManager'
-import { UserOperation } from './modules/moduleUtils'
+import { deepHexlify, erc4337RuntimeVersion } from '@account-abstraction/utils'
+import { UserOperationStruct, EntryPoint } from '@account-abstraction/contracts'
+import { UserOperationEventEvent } from '@account-abstraction/contracts/dist/types/EntryPoint'
+import { calcPreVerificationGas } from '@account-abstraction/sdk'
+import { requireCond, RpcError, tostr } from './utils'
+import { ExecutionManager } from './modules/ExecutionManager'
+import { getAddr } from './modules/moduleUtils'
 import { UserOperationByHashResponse, UserOperationReceipt } from './RpcTypes'
-import { ValidationErrors } from './modules/ValidationManager'
+import { ExecutionErrors, UserOperation, ValidationErrors } from './modules/Types'
 
 const HEX_REGEX = /^0x[a-fA-F\d]*$/i
 
@@ -27,10 +27,16 @@ export interface EstimateUserOpGasResult {
    * gas used for validation of this UserOperation, including account creation
    */
   verificationGas: BigNumberish
+
+  /**
+   * (possibly future timestamp) after which this UserOperation is valid
+   */
+  validAfter?: BigNumberish
+
   /**
    * the deadline after which this UserOperation is invalid (not a gas estimation parameter, but returned by validation
    */
-  deadline?: BigNumberish
+  validUntil?: BigNumberish
   /**
    * estimated cost of calling the account with the given callData
    */
@@ -41,7 +47,7 @@ export class UserOpMethodHandler {
   constructor (
     readonly execManager: ExecutionManager,
     readonly provider: Provider,
-    readonly signer: Wallet | JsonRpcSigner,
+    readonly signer: Signer,
     readonly config: BundlerConfig,
     readonly entryPoint: EntryPoint
   ) {
@@ -117,7 +123,8 @@ export class UserOpMethodHandler {
     const { returnInfo } = errorResult.errorArgs
     let {
       preOpGas,
-      deadline
+      validAfter,
+      validUntil
     } = returnInfo
 
     const callGasLimit = await this.provider.estimateGas({
@@ -128,16 +135,21 @@ export class UserOpMethodHandler {
       const message = err.message.match(/reason="(.*?)"/)?.at(1) ?? 'execution reverted'
       throw new RpcError(message, ExecutionErrors.UserOperationReverted)
     })
-    deadline = BigNumber.from(deadline)
-    if (deadline === 0) {
-      deadline = undefined
+    validAfter = BigNumber.from(validAfter)
+    validUntil = BigNumber.from(validUntil)
+    if (validUntil === BigNumber.from(0)) {
+      validUntil = undefined
+    }
+    if (validAfter === BigNumber.from(0)) {
+      validAfter = undefined
     }
     const preVerificationGas = calcPreVerificationGas(userOp)
     const verificationGas = BigNumber.from(preOpGas).toNumber()
     return {
       preVerificationGas,
       verificationGas,
-      deadline,
+      validAfter,
+      validUntil,
       callGasLimit
     }
   }
@@ -147,10 +159,8 @@ export class UserOpMethodHandler {
 
     const userOp = await resolveProperties(userOp1)
 
-    // console.log(`UserOperation: Sender=${userOp.sender}  Nonce=${tostr(userOp.nonce)} EntryPoint=${entryPointInput} Paymaster=${getAddr(
-    //   userOp.paymasterAndData)}`)
-    console.log(userOp)
-
+    console.log(`UserOperation: Sender=${userOp.sender}  Nonce=${tostr(userOp.nonce)} EntryPoint=${entryPointInput} Paymaster=${getAddr(
+      userOp.paymasterAndData)}`)
     await this.execManager.sendUserOperation(userOp, entryPointInput)
     return await this.entryPoint.getUserOpHash(userOp)
   }
@@ -267,6 +277,6 @@ export class UserOpMethodHandler {
 
   clientVersion (): string {
     // eslint-disable-next-line
-    return 'aa-bundler/' + require('../package.json').version
+    return 'aa-bundler/' + erc4337RuntimeVersion + (this.config.unsafe ? '/unsafe' : '')
   }
 }

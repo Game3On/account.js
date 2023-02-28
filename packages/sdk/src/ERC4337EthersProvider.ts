@@ -7,8 +7,8 @@ import { ClientConfig } from './ClientConfig'
 import { ERC4337EthersSigner } from './ERC4337EthersSigner'
 import { UserOperationEventListener } from './UserOperationEventListener'
 import { HttpRpcClient } from './HttpRpcClient'
-import { EntryPoint, UserOperationStruct } from '@aa-lib/contracts'
-import { getUserOpHash } from '@aa-lib/utils'
+import { EntryPoint, UserOperationStruct } from '@account-abstraction/contracts'
+import { getUserOpHash } from '@account-abstraction/utils'
 import { BaseAccountAPI } from './BaseAccountAPI'
 import Debug from 'debug'
 const debug = Debug('aa.provider')
@@ -42,6 +42,7 @@ export class ERC4337EthersProvider extends BaseProvider {
     // await this.httpRpcClient.validateChainId()
     this.initializedBlockNumber = await this.originalProvider.getBlockNumber()
     await this.smartAccountAPI.init()
+    // await this.signer.init()
     return this
   }
 
@@ -117,6 +118,6 @@ export class ERC4337EthersProvider extends BaseProvider {
   }
 
   async detectNetwork (): Promise<Network> {
-    return this.originalProvider.detectNetwork()
+    return (this.originalProvider as any).detectNetwork()
   }
 }

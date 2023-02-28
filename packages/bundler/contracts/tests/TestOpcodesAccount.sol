@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.15;
 
-import "@aa-lib/contracts/interfaces/IAccount.sol";
-import "@aa-lib/contracts/interfaces/IPaymaster.sol";
-import "@aa-lib/contracts/interfaces/IEntryPoint.sol";
+import "@account-abstraction/contracts/interfaces/IAccount.sol";
+import "@account-abstraction/contracts/interfaces/IPaymaster.sol";
+import "@account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import "./TestRuleAccount.sol";
 
 contract Dummy {

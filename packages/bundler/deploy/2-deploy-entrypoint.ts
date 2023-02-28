@@ -2,11 +2,11 @@ import { parseEther, parseUnits } from 'ethers/lib/utils'
 import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 import { ethers } from 'hardhat'
-import { DeterministicDeployer } from '@aa-lib/sdk'
+import { DeterministicDeployer } from '@accountjs/sdk'
 import {
   EntryPoint__factory, SimpleAccountFactory__factory, SimpleAccountForTokensFactory__factory, WETH__factory, USDToken__factory, ERC20__factory,
   WETHPaymaster__factory, USDPaymaster__factory, VerifyingPaymaster__factory, FixedPaymaster__factory
-} from '@aa-lib/contracts'
+} from '@accountjs/contracts'
 
 // deploy entrypoint - but only on debug network..
 const deployEP: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {

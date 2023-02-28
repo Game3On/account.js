@@ -1,10 +1,13 @@
 import { ExecutionManager } from './modules/ExecutionManager'
 import { ReputationDump, ReputationManager } from './modules/ReputationManager'
 import { MempoolManager } from './modules/MempoolManager'
+import { SendBundleReturn } from './modules/BundleManager'
+import { EventsManager } from './modules/EventsManager'
 
 export class DebugMethodHandler {
   constructor (
     readonly execManager: ExecutionManager,
+    readonly eventsManager: EventsManager,
     readonly repManager: ReputationManager,
     readonly mempoolMgr: MempoolManager
   ) {
@@ -29,8 +32,13 @@ export class DebugMethodHandler {
     }
   }
 
-  async sendBundleNow (): Promise<void> {
-    await this.execManager.attemptBundle(true)
+  async sendBundleNow (): Promise<SendBundleReturn | undefined> {
+    const ret = await this.execManager.attemptBundle(true)
+    // handlePastEvents is performed before processing the next bundle.
+    // however, in debug mode, we are interested in the side effects
+    // (on the mempool) of this "sendBundle" operation
+    await this.eventsManager.handlePastEvents()
+    return ret
   }
 
   clearState (): void {

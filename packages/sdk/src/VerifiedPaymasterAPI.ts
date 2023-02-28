@@ -1,7 +1,7 @@
 import { defaultAbiCoder, keccak256, hexlify, resolveProperties, arrayify } from 'ethers/lib/utils'
 import { Signer } from 'ethers'
 import { BasePaymasterAPI } from './BasePaymasterAPI'
-import { UserOperationStruct } from '@aa-lib/contracts'
+import { UserOperationStruct } from '@account-abstraction/contracts'
 
 /**
  * an API to external a UserOperation with paymaster info

@@ -1,5 +1,5 @@
-import { UserOperationStruct } from '@aa-lib/contracts'
-import { NotPromise, packUserOp } from '@aa-lib/utils'
+import { UserOperationStruct } from '@account-abstraction/contracts'
+import { NotPromise, packUserOp } from '@account-abstraction/utils'
 import { arrayify, hexlify } from 'ethers/lib/utils'
 
 export interface GasOverheads {
@@ -58,7 +58,7 @@ export const DefaultGasOverheads: GasOverheads = {
  * @param userOp filled userOp to calculate. The only possible missing fields can be the signature and preVerificationGas itself
  * @param overheads gas overheads to use, to override the default values
  */
-export function calcPreVerificationGas (userOp: Partial<NotPromise<UserOperationStruct>>, overheads?: Partial<GasOverheads>, hasPaymaster?: boolean): number {
+export function calcPreVerificationGas (userOp: Partial<NotPromise<UserOperationStruct>>, overheads?: Partial<GasOverheads>): number {
   const ov = { ...DefaultGasOverheads, ...(overheads ?? {}) }
   const p: NotPromise<UserOperationStruct> = {
     // dummy values, in case the UserOp is incomplete.
@@ -68,15 +68,13 @@ export function calcPreVerificationGas (userOp: Partial<NotPromise<UserOperation
   } as any
 
   const packed = arrayify(packUserOp(p, false))
+  const lengthInWord = (packed.length + 31) / 32
   const callDataCost = packed.map(x => x === 0 ? ov.zeroByte : ov.nonZeroByte).reduce((sum, x) => sum + x)
   const ret = Math.round(
     callDataCost +
     ov.fixed / ov.bundleSize +
     ov.perUserOp +
-    ov.perUserOpWord * packed.length
+    ov.perUserOpWord * lengthInWord
   )
-  if (hasPaymaster != null && hasPaymaster) {
-    return ret + 1024 // 256 bytes for paymaster reserve (usually 20 + 65)
-  }
   return ret
 }

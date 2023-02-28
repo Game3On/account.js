@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// TODO: get hardhat types from '@aa-lib' package directly
+// TODO: get hardhat types from '@account-abstraction' package directly
 // only to import the file in hardhat compilation
-import "@aa-lib/contracts/samples/SimpleAccount.sol";
+import "@account-abstraction/contracts/samples/SimpleAccount.sol";
 
 contract SampleRecipient {
 

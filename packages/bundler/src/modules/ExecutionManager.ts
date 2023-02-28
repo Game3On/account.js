@@ -1,17 +1,13 @@
 import { ReputationManager } from './ReputationManager'
 import { clearInterval } from 'timers'
 import { MempoolManager } from './MempoolManager'
-import { BundleManager } from './BundleManager'
+import { BundleManager, SendBundleReturn } from './BundleManager'
 import Debug from 'debug'
-import { UserOperation } from './moduleUtils'
 import { ValidationManager } from './ValidationManager'
 import { Mutex } from 'async-mutex'
+import { UserOperation } from './Types'
 
 const debug = Debug('aa.exec')
-
-export enum ExecutionErrors {
-  UserOperationReverted = -32521
-}
 
 /**
  * execute userOps manually or using background timer.
@@ -39,16 +35,19 @@ export class ExecutionManager {
     await this.mutex.runExclusive(async () => {
       debug('sendUserOperation')
       this.validationManager.validateInputParameters(userOp, entryPointInput)
-      const validationResult = await this.validationManager.validateUserOp(userOp)
+      const validationResult = await this.validationManager.validateUserOp(userOp, undefined)
+      const userOpHash = await this.validationManager.entryPoint.getUserOpHash(userOp)
       this.mempoolManager.addUserOp(userOp,
+        userOpHash,
         validationResult.returnInfo.prefund,
         validationResult.senderInfo,
+        validationResult.referencedContracts,
         validationResult.aggregatorInfo?.addr)
       await this.attemptBundle(false)
     })
   }
 
-  setReputationCorn (interval: number): void {
+  setReputationCron (interval: number): void {
     debug('set reputation interval to', interval)
     clearInterval(this.reputationCron)
     if (interval !== 0) {
@@ -80,10 +79,15 @@ export class ExecutionManager {
    * attempt to send a bundle now.
    * @param force
    */
-  async attemptBundle (force = true): Promise<void> {
+  async attemptBundle (force = true): Promise<SendBundleReturn | undefined> {
     debug('attemptBundle force=', force, 'count=', this.mempoolManager.count(), 'max=', this.maxMempoolSize)
     if (force || this.mempoolManager.count() >= this.maxMempoolSize) {
-      await this.bundleManager.sendNextBundle()
+      const ret = await this.bundleManager.sendNextBundle()
+      if (this.maxMempoolSize === 0) {
+        // in "auto-bundling" mode (which implies auto-mining) also flush mempool from included UserOps
+        await this.bundleManager.handlePastEvents()
+      }
+      return ret
     }
   }
 }

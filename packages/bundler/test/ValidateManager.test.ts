@@ -1,4 +1,4 @@
-import { EntryPoint, EntryPoint__factory } from '@aa-lib/contracts'
+import { EntryPoint, EntryPoint__factory } from '@accountjs/contracts'
 import { defaultAbiCoder, hexConcat, hexlify, parseEther } from 'ethers/lib/utils'
 import { ethers } from 'hardhat'
 import { expect } from 'chai'
@@ -17,7 +17,7 @@ import {
 import { ValidationManager } from '../src/modules/ValidationManager'
 import { ReputationManager } from '../src/modules/ReputationManager'
 import { UserOperation } from '../src/modules/moduleUtils'
-import { AddressZero, decodeErrorReason } from '@aa-lib/utils'
+import { AddressZero, decodeErrorReason } from '@accountjs/utils'
 import { isGeth } from '../src/utils'
 import { TestRecursionAccount__factory } from '../src/types/factories/contracts/tests/TestRecursionAccount__factory'
 

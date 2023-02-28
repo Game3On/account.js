@@ -3,15 +3,15 @@ import {
   EntryPoint__factory,
   SimpleAccountFactory__factory,
   UserOperationStruct
-} from '@aa-lib/contracts'
+} from '@accountjs/contracts'
 import { Wallet } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
 import { expect } from 'chai'
 import { anyValue } from '@nomicfoundation/hardhat-chai-matchers/withArgs'
 import { ethers } from 'hardhat'
 import { DeterministicDeployer, SimpleAccountAPI } from '../src'
-import { SampleRecipient, SampleRecipient__factory } from '@aa-lib/utils/src/types'
-import { rethrowError } from '@aa-lib/utils'
+import { SampleRecipient, SampleRecipient__factory } from '@accountjs/utils/src/types'
+import { rethrowError } from '@accountjs/utils'
 
 const provider = ethers.provider
 const signer = provider.getSigner()

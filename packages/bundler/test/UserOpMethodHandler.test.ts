@@ -11,16 +11,16 @@ import {
   EntryPoint__factory,
   SimpleAccountFactory__factory,
   UserOperationStruct
-} from '@aa-lib/contracts'
+} from '@accountjs/contracts'
 
 import { Wallet } from 'ethers'
-import { DeterministicDeployer, SimpleAccountAPI } from '@aa-lib/sdk'
-import { postExecutionDump } from '@aa-lib/utils/src/postExecCheck'
+import { DeterministicDeployer, SimpleAccountAPI } from '@accountjs/sdk'
+import { postExecutionDump } from '@accountjs/utils/src/postExecCheck'
 import {
   SampleRecipient, TestRuleAccount, TestOpcodesAccount__factory
 } from '../src/types'
-import { deepHexlify } from '@aa-lib/utils'
-import { UserOperationEventEvent } from '@aa-lib/contracts/types/EntryPoint'
+import { deepHexlify } from '@accountjs/utils'
+import { UserOperationEventEvent } from '@accountjs/contracts/types/EntryPoint'
 import { UserOperationReceipt } from '../src/RpcTypes'
 import { ExecutionManager } from '../src/modules/ExecutionManager'
 import { BundlerReputationParams, ReputationManager } from '../src/modules/ReputationManager'

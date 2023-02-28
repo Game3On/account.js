@@ -1,6 +1,6 @@
 {
-  "name": "@aa-lib/sdk",
-  "version": "0.1.7",
+  "name": "@accountjs/sdk",
+  "version": "0.2.0",
   "scripts": {
     "clear": "rm -rf dist artifacts cache",
     "lint": "eslint -f unix .",
@@ -11,8 +11,10 @@
     "dev": "pnpm clear && tsc --project tsconfig.dev.json"
   },
   "dependencies": {
-    "@aa-lib/contracts": "workspace:*",
-    "@aa-lib/utils": "workspace:*",
+    "@account-abstraction/contracts": "^0.5.0",
+    "@account-abstraction/utils": "^0.5.0",
+    "@accountjs/contracts": "workspace:*",
+    "@accountjs/utils": "workspace:*",
     "@ethersproject/abstract-provider": "^5.7.0",
     "@ethersproject/abstract-signer": "^5.7.0",
     "@ethersproject/networks": "^5.7.1",

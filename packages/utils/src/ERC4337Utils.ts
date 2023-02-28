@@ -1,7 +1,10 @@
-import { defaultAbiCoder, hexlify, keccak256 } from 'ethers/lib/utils'
-import { UserOperationStruct } from '@aa-lib/contracts'
-import { abi as entryPointAbi } from '@aa-lib/contracts/artifacts/IEntryPoint.json'
+import { defaultAbiCoder, hexConcat, hexlify, keccak256, resolveProperties } from 'ethers/lib/utils'
+import { UserOperationStruct } from '@account-abstraction/contracts'
+import { abi as entryPointAbi } from '@account-abstraction/contracts/artifacts/IEntryPoint.json'
 import { ethers } from 'ethers'
+import Debug from 'debug'
+
+const debug = Debug('aa.utils')
 
 // UserOperation is the first parameter of validateUseOp
 const validateUserOpMethod = 'simulateValidation'
@@ -117,6 +120,62 @@ export function getUserOpHash (op: NotPromise<UserOperationStruct>, entryPoint: 
   return keccak256(enc)
 }
 
+const ErrorSig = keccak256(Buffer.from('Error(string)')).slice(0, 10) // 0x08c379a0
+const FailedOpSig = keccak256(Buffer.from('FailedOp(uint256,string)')).slice(0, 10) // 0x220266b6
+
+interface DecodedError {
+  message: string
+  opIndex?: number
+}
+
+/**
+ * decode bytes thrown by revert as Error(message) or FailedOp(opIndex,paymaster,message)
+ */
+export function decodeErrorReason (error: string): DecodedError | undefined {
+  debug('decoding', error)
+  if (error.startsWith(ErrorSig)) {
+    const [message] = defaultAbiCoder.decode(['string'], '0x' + error.substring(10))
+    return { message }
+  } else if (error.startsWith(FailedOpSig)) {
+    let [opIndex, message] = defaultAbiCoder.decode(['uint256', 'string'], '0x' + error.substring(10))
+    message = `FailedOp: ${message as string}`
+    return {
+      message,
+      opIndex
+    }
+  }
+}
+
+/**
+ * update thrown Error object with our custom FailedOp message, and re-throw it.
+ * updated both "message" and inner encoded "data"
+ * tested on geth, hardhat-node
+ * usage: entryPoint.handleOps().catch(decodeError)
+ */
+export function rethrowError (e: any): any {
+  let error = e
+  let parent = e
+  if (error?.error != null) {
+    error = error.error
+  }
+  while (error?.data != null) {
+    parent = error
+    error = error.data
+  }
+  const decoded = typeof error === 'string' && error.length > 2 ? decodeErrorReason(error) : undefined
+  if (decoded != null) {
+    e.message = decoded.message
+
+    if (decoded.opIndex != null) {
+      // helper for chai: convert our FailedOp error into "Error(msg)"
+      const errorWithMsg = hexConcat([ErrorSig, defaultAbiCoder.encode(['string'], [decoded.message])])
+      // modify in-place the error object:
+      parent.data = errorWithMsg
+    }
+  }
+  throw e
+}
+
 /**
  * hexlify all members of object, recursively
  * @param obj
@@ -138,4 +197,10 @@ export function deepHexlify (obj: any): any {
       ...set,
       [key]: deepHexlify(obj[key])
     }), {})
+}
+
+// resolve all property and hexlify.
+// (UserOpMethodHandler receives data from the network, so we need to pack our generated values)
+export async function resolveHexlify (a: any): Promise<any> {
+  return deepHexlify(await resolveProperties(a))
 }

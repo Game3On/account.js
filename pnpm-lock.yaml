@@ -167,9 +167,11 @@ importers:
 
   packages/bundler:
     specifiers:
-      '@aa-lib/contracts': workspace:*
-      '@aa-lib/sdk': workspace:*
-      '@aa-lib/utils': workspace:*
+      '@account-abstraction/contracts': ^0.5.0
+      '@account-abstraction/utils': ^0.5.0
+      '@accountjs/contracts': workspace:*
+      '@accountjs/sdk': workspace:*
+      '@accountjs/utils': workspace:*
       '@ethersproject/abi': ^5.7.0
       '@ethersproject/properties': ^5.7.0
       '@ethersproject/providers': ^5.7.2
@@ -206,9 +208,11 @@ importers:
       typechain: ^8.1.1
       typescript: ^4.9.5
     dependencies:
-      '@aa-lib/contracts': link:../account-abstraction/contracts
-      '@aa-lib/sdk': link:../sdk
-      '@aa-lib/utils': link:../utils
+      '@account-abstraction/contracts': 0.5.0
+      '@account-abstraction/utils': 0.5.0
+      '@accountjs/contracts': link:../account-abstraction/contracts
+      '@accountjs/sdk': link:../sdk
+      '@accountjs/utils': link:../utils
       '@ethersproject/abi': 5.7.0
       '@ethersproject/properties': 5.7.0
       '@ethersproject/providers': 5.7.2
@@ -248,8 +252,10 @@ importers:
 
   packages/sdk:
     specifiers:
-      '@aa-lib/contracts': workspace:*
-      '@aa-lib/utils': workspace:*
+      '@account-abstraction/contracts': ^0.5.0
+      '@account-abstraction/utils': ^0.5.0
+      '@accountjs/contracts': workspace:*
+      '@accountjs/utils': workspace:*
       '@ethersproject/abstract-provider': ^5.7.0
       '@ethersproject/abstract-signer': ^5.7.0
       '@ethersproject/networks': ^5.7.1
@@ -266,8 +272,10 @@ importers:
       hardhat: ^2.12.6
       typescript: ^4.9.5
     dependencies:
-      '@aa-lib/contracts': link:../account-abstraction/contracts
-      '@aa-lib/utils': link:../utils
+      '@account-abstraction/contracts': 0.5.0
+      '@account-abstraction/utils': 0.5.0
+      '@accountjs/contracts': link:../account-abstraction/contracts
+      '@accountjs/utils': link:../utils
       '@ethersproject/abstract-provider': 5.7.0
       '@ethersproject/abstract-signer': 5.7.0
       '@ethersproject/networks': 5.7.1
@@ -287,7 +295,8 @@ importers:
 
   packages/utils:
     specifiers:
-      '@aa-lib/contracts': workspace:*
+      '@account-abstraction/contracts': ^0.5.0
+      '@accountjs/contracts': workspace:*
       '@ethersproject/abi': ^5.7.0
       '@ethersproject/providers': ^5.7.2
       '@nomicfoundation/hardhat-toolbox': ^1.0.2
@@ -300,7 +309,8 @@ importers:
       hardhat: ^2.12.6
       typescript: ^4.9.5
     dependencies:
-      '@aa-lib/contracts': link:../account-abstraction/contracts
+      '@account-abstraction/contracts': 0.5.0
+      '@accountjs/contracts': link:../account-abstraction/contracts
       '@ethersproject/abi': 5.7.0
       '@ethersproject/providers': 5.7.2
       '@openzeppelin/contracts': 4.8.1
@@ -315,6 +325,25 @@ importers:
       typescript: 4.9.5
 
 packages:
+
+  /@account-abstraction/contracts/0.5.0:
+    resolution: {integrity: sha512-CKyS9Zh5rcYUM+4B6TlaB9+THHzJ+6TY3tWF5QofqvFpqGNvIhF8ddy6wyCmqZw6TB74/yYv7cYD/RarVudfDg==}
+    dev: false
+
+  /@account-abstraction/utils/0.5.0:
+    resolution: {integrity: sha512-dgXguTn5WgFMmr3wQMdLGEoIMDcIJgzAv74YlHeb2D3Nyy1pByPArSb3eLOOcgxCJSJeqTscpO9P57uhNkkC4A==}
+    dependencies:
+      '@account-abstraction/contracts': 0.5.0
+      '@ethersproject/abi': 5.7.0
+      '@ethersproject/providers': 5.7.2
+      '@openzeppelin/contracts': 4.8.1
+      debug: 4.3.4
+      ethers: 5.7.2
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
+    dev: false
 
   /@babel/code-frame/7.18.6:
     resolution: {integrity: sha512-TDCmlK5eOvH+eH7cdAFlNXeVJqWIQ7gW9tY1GJIpUtFb6CmjVyq2VM3u71bOyR8CRihcCgMUYoDNyLXao3+70Q==}

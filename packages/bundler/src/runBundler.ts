@@ -1,20 +1,18 @@
-import ow from 'ow'
 import fs from 'fs'
 
 import { Command } from 'commander'
-import { erc4337RuntimeVersion } from '@aa-lib/utils'
+import { erc4337RuntimeVersion } from '@account-abstraction/utils'
 import { ethers, Wallet } from 'ethers'
-import { BaseProvider } from '@ethersproject/providers'
 
-import { BundlerConfig, bundlerConfigDefault, BundlerConfigShape } from './BundlerConfig'
 import { BundlerServer } from './BundlerServer'
 import { UserOpMethodHandler } from './UserOpMethodHandler'
-import { EntryPoint, EntryPoint__factory } from '@aa-lib/contracts'
+import { EntryPoint, EntryPoint__factory } from '@account-abstraction/contracts'
 
 import { initServer } from './modules/initServer'
 import { DebugMethodHandler } from './DebugMethodHandler'
-import { DeterministicDeployer } from '@aa-lib/sdk'
-import { isGeth } from './utils'
+import { DeterministicDeployer } from '@account-abstraction/sdk'
+import { isGeth, supportsRpcMethod } from './utils'
+import { resolveConfiguration } from './Config'
 
 // this is done so that console.log outputs BigNumber as hex string instead of unreadable object
 export const inspectCustomSymbol = Symbol.for('nodejs.util.inspect.custom')
@@ -27,34 +25,9 @@ const CONFIG_FILE_NAME = 'workdir/bundler.config.json'
 
 export let showStackTraces = false
 
-export function resolveConfiguration (programOpts: any): BundlerConfig {
-  let fileConfig: Partial<BundlerConfig> = {}
-
-  const commandLineParams = getCommandLineParams(programOpts)
-  const configFileName = programOpts.config
-  if (fs.existsSync(configFileName)) {
-    fileConfig = JSON.parse(fs.readFileSync(configFileName, 'ascii'))
-  }
-  const mergedConfig = Object.assign({}, bundlerConfigDefault, fileConfig, commandLineParams)
-  console.log('Merged configuration:', JSON.stringify(mergedConfig))
-  ow(mergedConfig, ow.object.exactShape(BundlerConfigShape))
-  return mergedConfig
-}
-
-function getCommandLineParams (programOpts: any): Partial<BundlerConfig> {
-  const params: any = {}
-  for (const bundlerConfigShapeKey in BundlerConfigShape) {
-    const optionValue = programOpts[bundlerConfigShapeKey]
-    if (optionValue != null) {
-      params[bundlerConfigShapeKey] = optionValue
-    }
-  }
-  return params as BundlerConfig
-}
-
 export async function connectContracts (
   wallet: Wallet,
-  entryPointAddress: string): Promise<{ entryPoint: EntryPoint}> {
+  entryPointAddress: string): Promise<{ entryPoint: EntryPoint }> {
   const entryPoint = EntryPoint__factory.connect(entryPointAddress, wallet)
   return {
     entryPoint
@@ -91,8 +64,10 @@ export async function runBundler (argv: string[], overrideExit = true): Promise<
     .option('--mnemonic <file>', 'mnemonic/private-key file of signer account')
     .option('--entryPoint <string>', 'address of the supported EntryPoint contract')
     .option('--port <number>', 'server listening port', '3000')
-    .option('--config <string>', 'path to config file)', CONFIG_FILE_NAME)
+    .option('--config <string>', 'path to config file', CONFIG_FILE_NAME)
+    .option('--auto', 'automatic bundling (bypass config.autoBundleMempoolSize)', false)
     .option('--unsafe', 'UNSAFE mode: no storage or opcode checks (safe mode requires geth)')
+    .option('--conditionalRpc', 'Use eth_sendRawTransactionConditional RPC)')
     .option('--show-stack-traces', 'Show stack traces.')
     .option('--createMnemonic', 'create the mnemonic file')
 
@@ -101,7 +76,7 @@ export async function runBundler (argv: string[], overrideExit = true): Promise<
 
   console.log('command-line arguments: ', program.opts())
 
-  const config = resolveConfiguration(programOpts)
+  const { config, provider, wallet } = await resolveConfiguration(programOpts)
   if (programOpts.createMnemonic != null) {
     const mnemonicFile = config.mnemonic
     console.log('Creating mnemonic in file', mnemonicFile)
@@ -113,18 +88,6 @@ export async function runBundler (argv: string[], overrideExit = true): Promise<
     console.log('created mnemonic file', mnemonicFile)
     process.exit(1)
   }
-  const provider: BaseProvider =
-    // eslint-disable-next-line
-    config.network === 'hardhat' ? require('hardhat').ethers.provider :
-      ethers.getDefaultProvider(config.network)
-  let mnemonic: string
-  let wallet: Wallet
-  try {
-    mnemonic = fs.readFileSync(config.mnemonic, 'ascii').trim()
-    wallet = Wallet.fromMnemonic(mnemonic).connect(provider)
-  } catch (e: any) {
-    throw new Error(`Unable to read --mnemonic ${config.mnemonic}: ${e.message as string}`)
-  }
 
   const {
     // name: chainName,
@@ -135,6 +98,10 @@ export async function runBundler (argv: string[], overrideExit = true): Promise<
     await new DeterministicDeployer(provider as any).deterministicDeploy(EntryPoint__factory.bytecode)
   }
 
+  if (config.conditionalRpc && !await supportsRpcMethod(provider as any, 'eth_sendRawTransactionConditional')) {
+    console.error('FATAL: --conditionalRpc requires a node that support eth_sendRawTransactionConditional')
+    process.exit(1)
+  }
   if (!config.unsafe && !await isGeth(provider as any)) {
     console.error('FATAL: full validation requires GETH. for local UNSAFE mode: use --unsafe')
     process.exit(1)
@@ -146,8 +113,12 @@ export async function runBundler (argv: string[], overrideExit = true): Promise<
 
   // bundleSize=1 replicate current immediate bundling mode
   const execManagerConfig = {
-    ...config,
-    autoBundleMempoolSize: 1
+    ...config
+    // autoBundleMempoolSize: 0
+  }
+  if (programOpts.auto === true) {
+    execManagerConfig.autoBundleMempoolSize = 0
+    execManagerConfig.autoBundleInterval = 0
   }
 
   const [execManager, eventsManager, reputationManager, mempoolManager] = initServer(execManagerConfig, entryPoint.signer)
@@ -159,7 +130,7 @@ export async function runBundler (argv: string[], overrideExit = true): Promise<
     entryPoint
   )
   eventsManager.initEventListener()
-  const debugHandler = new DebugMethodHandler(execManager, reputationManager, mempoolManager)
+  const debugHandler = new DebugMethodHandler(execManager, eventsManager, reputationManager, mempoolManager)
 
   const bundlerServer = new BundlerServer(
     methodHandler,
@@ -170,6 +141,7 @@ export async function runBundler (argv: string[], overrideExit = true): Promise<
   )
 
   void bundlerServer.asyncStart().then(async () => {
+    console.log('Bundle interval (seconds)', execManagerConfig.autoBundleInterval)
     console.log('connected to network', await provider.getNetwork().then(net => {
       return {
         name: net.name,

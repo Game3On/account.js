@@ -1,28 +1,19 @@
-import { EntryPoint } from '@aa-lib/contracts'
+import { EntryPoint } from '@account-abstraction/contracts'
 import { ReputationManager } from './ReputationManager'
 import { BigNumber, BigNumberish, BytesLike, ethers } from 'ethers'
 import { requireCond, RpcError } from '../utils'
-import { getAddr, UserOperation } from './moduleUtils'
-import { AddressZero, decodeErrorReason } from '@aa-lib/utils'
-import { calcPreVerificationGas } from '@aa-lib/sdk'
+import { AddressZero, decodeErrorReason } from '@account-abstraction/utils'
+import { calcPreVerificationGas } from '@account-abstraction/sdk'
 import { parseScannerResult } from '../parseScannerResult'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { BundlerCollectorReturn, bundlerCollectorTracer, ExitInfo } from '../BundlerCollectorTracer'
 import { debug_traceCall } from '../GethTracer'
 import Debug from 'debug'
+import { GetCodeHashes__factory } from '../types'
+import { ReferencedCodeHashes, StakeInfo, StorageMap, UserOperation, ValidationErrors } from './Types'
+import { getAddr, runContractScript } from './moduleUtils'
 
 const debug = Debug('aa.mgr.validate')
-
-export enum ValidationErrors {
-  InvalidFields = -32602,
-  SimulateValidation = -32500,
-  SimulatePaymasterValidation = -32501,
-  OpcodeValidation = -32502,
-  ExpiresShortly = -32503,
-  Reputation = -32504,
-  InsufficientStake = -32505,
-  UnsupportedSignatureAggregator = -32506
-}
 
 /**
  * result from successful simulateValidation
@@ -31,6 +22,7 @@ export interface ValidationResult {
   returnInfo: {
     preOpGas: BigNumberish
     prefund: BigNumberish
+    sigFailed: boolean
     deadline: number
   }
 
@@ -40,10 +32,10 @@ export interface ValidationResult {
   aggregatorInfo?: StakeInfo
 }
 
-export interface StakeInfo {
-  addr: string
-  stake: BigNumberish
-  unstakeDelaySec: BigNumberish
+export interface ValidateUserOpResult extends ValidationResult {
+
+  referencedContracts: ReferencedCodeHashes
+  storageMap: StorageMap
 }
 
 const HEX_REGEX = /^0x[a-fA-F\d]*$/i
@@ -130,6 +122,10 @@ export class ValidationManager {
       throw new Error('Invalid response. simulateCall must revert')
     }
     const data = (lastResult as ExitInfo).data
+    // Hack to handle SELFDESTRUCT until we fix entrypoint
+    if (data === '0x') {
+      return [data as any, tracerResult]
+    }
     try {
       const {
         name: errorName,
@@ -169,17 +165,39 @@ export class ValidationManager {
    * one item to check that was un-modified is the aggregator..
    * @param userOp
    */
-  async validateUserOp (userOp: UserOperation, checkStakes = true): Promise<ValidationResult> {
-    // TODO: use traceCall
+  async validateUserOp (userOp: UserOperation, previousCodeHashes?: ReferencedCodeHashes, checkStakes = true): Promise<ValidateUserOpResult> {
+    if (previousCodeHashes != null && previousCodeHashes.addresses.length > 0) {
+      const { hash: codeHashes } = await this.getCodeHashes(previousCodeHashes.addresses)
+      requireCond(codeHashes === previousCodeHashes.hash,
+        'modified code after first validation',
+        ValidationErrors.OpcodeValidation)
+    }
     let res: ValidationResult
+    let codeHashes: ReferencedCodeHashes = {
+      addresses: [],
+      hash: ''
+    }
+    let storageMap: StorageMap = {}
     if (!this.unsafe) {
       let tracerResult: BundlerCollectorReturn
       [res, tracerResult] = await this._geth_traceCall_SimulateValidation(userOp)
-      parseScannerResult(userOp, tracerResult, res, this.entryPoint)
+      let contractAddresses: string[]
+      [contractAddresses, storageMap] = parseScannerResult(userOp, tracerResult, res, this.entryPoint)
+      // if no previous contract hashes, then calculate hashes of contracts
+      if (previousCodeHashes == null) {
+        codeHashes = await this.getCodeHashes(contractAddresses)
+      }
+      if (res as any === '0x') {
+        throw new Error('simulateValidation reverted with no revert string!')
+      }
     } else {
       // NOTE: this mode doesn't do any opcode checking and no stake checking!
       res = await this._callSimulateValidation(userOp)
     }
+
+    requireCond(!res.returnInfo.sigFailed,
+      'Invalid UserOp signature or paymaster signature',
+      ValidationErrors.InvalidSignature)
 
     requireCond(res.returnInfo.deadline == null || res.returnInfo.deadline + 30 < Date.now() / 1000,
       'expires too soon',
@@ -193,7 +211,24 @@ export class ValidationManager {
       'Currently not supporting aggregator',
       ValidationErrors.UnsupportedSignatureAggregator)
 
-    return res
+    return {
+      ...res,
+      referencedContracts: codeHashes,
+      storageMap
+    }
+  }
+
+  async getCodeHashes (addresses: string[]): Promise<ReferencedCodeHashes> {
+    const { hash } = await runContractScript(
+      this.entryPoint.provider,
+      new GetCodeHashes__factory(),
+      [addresses]
+    )
+
+    return {
+      hash,
+      addresses
+    }
   }
 
   /**

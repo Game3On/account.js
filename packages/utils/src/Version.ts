@@ -1,1 +1,2 @@
-export { version as erc4337RuntimeVersion } from '../package.json'
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+export const erc4337RuntimeVersion: string = require('../../package.json').version

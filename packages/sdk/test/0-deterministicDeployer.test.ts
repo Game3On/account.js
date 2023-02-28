@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { SampleRecipient__factory } from '@aa-lib/utils/src/types'
+import { SampleRecipient__factory } from '@accountjs/utils/src/types'
 import { ethers } from 'hardhat'
 import { hexValue } from 'ethers/lib/utils'
 import { DeterministicDeployer } from '../src/DeterministicDeployer'

@@ -3,12 +3,12 @@ import { Provider } from '@ethersproject/providers'
 import {
   EntryPoint, EntryPoint__factory,
   UserOperationStruct
-} from '@aa-lib/contracts'
+} from '@account-abstraction/contracts'
 
 import { TransactionDetailsForUserOp } from './TransactionDetailsForUserOp'
 import { resolveProperties } from 'ethers/lib/utils'
-import { BasePaymasterAPI } from './BasePaymasterAPI'
-import { getUserOpHash, NotPromise, packUserOp } from '@aa-lib/utils'
+import { PaymasterAPI } from './PaymasterAPI'
+import { getUserOpHash, NotPromise, packUserOp } from '@account-abstraction/utils'
 import { calcPreVerificationGas, GasOverheads } from './calcPreVerificationGas'
 
 export interface BaseApiParams {
@@ -16,7 +16,7 @@ export interface BaseApiParams {
   entryPointAddress: string
   accountAddress?: string
   overheads?: Partial<GasOverheads>
-  paymasterAPI?: BasePaymasterAPI
+  paymasterAPI?: PaymasterAPI
 }
 
 export interface UserOpResult {
@@ -47,7 +47,7 @@ export abstract class BaseAccountAPI {
   overheads?: Partial<GasOverheads>
   entryPointAddress: string
   accountAddress?: string
-  paymasterAPI?: BasePaymasterAPI
+  paymasterAPI?: PaymasterAPI
 
   /**
    * base constructor.
@@ -154,10 +154,9 @@ export abstract class BaseAccountAPI {
    * should cover cost of putting calldata on-chain, and some overhead.
    * actual overhead depends on the expected bundle size
    */
-  async getPreVerificationGas (userOp: Partial<UserOperationStruct>, hasPaymaster?: boolean): Promise<number> {
+  async getPreVerificationGas (userOp: Partial<UserOperationStruct>): Promise<number> {
     const p = await resolveProperties(userOp)
-    return calcPreVerificationGas(p, this.overheads, hasPaymaster)
-    // return 64000
+    return calcPreVerificationGas(p, this.overheads)
   }
 
   /**
@@ -264,19 +263,19 @@ export abstract class BaseAccountAPI {
       paymasterAndData: '0x'
     }
 
+    let paymasterAndData: string | undefined
     if (this.paymasterAPI != null) {
       // fill (partial) preVerificationGas (all except the cost of the generated paymasterAndData)
-      partialUserOp.preVerificationGas = this.getPreVerificationGas(partialUserOp, true)
-      const paymasterAndData = await this.paymasterAPI.getPaymasterAndData(partialUserOp)
-      partialUserOp.paymasterAndData = paymasterAndData
-    } else {
-      partialUserOp.preVerificationGas = this.getPreVerificationGas(partialUserOp, false)
+      const userOpForPm = {
+        ...partialUserOp,
+        preVerificationGas: await this.getPreVerificationGas(partialUserOp)
+      }
+      paymasterAndData = await this.paymasterAPI.getPaymasterAndData(userOpForPm)
     }
-    // userOpForPm.paymasterAndData = paymasterAndData ?? '0x'
-
+    partialUserOp.paymasterAndData = paymasterAndData ?? '0x'
     return {
       ...partialUserOp,
-      // preVerificationGas: this.getPreVerificationGas(userOpForPm), // paymaster with data calculation will change this
+      preVerificationGas: this.getPreVerificationGas(partialUserOp),
       signature: ''
     }
   }

@@ -1,6 +1,6 @@
 import { resolveProperties } from 'ethers/lib/utils'
 import { NotPromise } from './ERC4337Utils'
-import { EntryPoint, UserOperationStruct } from '@aa-lib/contracts'
+import { EntryPoint, UserOperationStruct } from '@account-abstraction/contracts'
 import Debug from 'debug'
 
 const debug = Debug('aa.postExec')
@@ -9,7 +9,7 @@ export async function postExecutionDump (entryPoint: EntryPoint, userOpHash: str
   const { gasPaid, gasUsed, success, userOp } = await postExecutionCheck(entryPoint, userOpHash)
   /// / debug dump:
   debug('==== used=', gasUsed, 'paid', gasPaid, 'over=', gasPaid - gasUsed,
-    'callLen=', userOp.callData.length, 'initLen=', userOp.initCode.length, success ? 'success' : 'failed')
+    'callLen=', userOp?.callData?.length, 'initLen=', userOp?.initCode?.length, success ? 'success' : 'failed')
 }
 
 /**

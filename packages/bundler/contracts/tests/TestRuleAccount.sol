@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.15;
 
-import "@aa-lib/contracts/interfaces/IAccount.sol";
-import "@aa-lib/contracts/interfaces/IPaymaster.sol";
-import "@aa-lib/contracts/interfaces/IEntryPoint.sol";
+import "@account-abstraction/contracts/interfaces/IAccount.sol";
+import "@account-abstraction/contracts/interfaces/IPaymaster.sol";
+import "@account-abstraction/contracts/interfaces/IEntryPoint.sol";
 
 /**
  * contract for testing account interaction.
@@ -42,7 +42,7 @@ contract TestRuleAccount is IAccount, IPaymaster {
         entryPoint.addStake{value : msg.value}(1);
     }
 
-    function validateUserOp(UserOperation calldata userOp, bytes32, address, uint256 missingAccountFunds)
+    function validateUserOp(UserOperation calldata userOp, bytes32, uint256 missingAccountFunds)
     external virtual override returns (uint256) {
         if (missingAccountFunds > 0) {
             /* solhint-disable-next-line avoid-low-level-calls */

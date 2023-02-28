@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { BigNumber } from 'ethers'
-import { deepHexlify } from '@aa-lib/utils'
+import { deepHexlify } from '@accountjs/utils'
 
 describe('#deepHexlify', function () {
   it('empty', () => {

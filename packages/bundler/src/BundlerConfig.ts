@@ -10,6 +10,7 @@ export interface BundlerConfig {
   network: string
   port: string
   unsafe: boolean
+  conditionalRpc: boolean
 
   whitelist?: string[]
   blacklist?: string[]
@@ -30,6 +31,7 @@ export const BundlerConfigShape = {
   network: ow.string,
   port: ow.string,
   unsafe: ow.boolean,
+  conditionalRpc: ow.boolean,
 
   whitelist: ow.optional.array.ofType(ow.string),
   blacklist: ow.optional.array.ofType(ow.string),
@@ -44,6 +46,7 @@ export const BundlerConfigShape = {
 // TODO: implement merging config (args -> config.js -> default) and runtime shape validation
 export const bundlerConfigDefault: Partial<BundlerConfig> = {
   port: '3000',
-  entryPoint: '0x1306b01bC3e4AD202612D3843387e94737673F53',
-  unsafe: false
+  entryPoint: '0x0576a174D229E3cFA37253523E645A78A0C91B57',
+  unsafe: false,
+  conditionalRpc: false
 }
