@@ -79,19 +79,6 @@ class Runner {
   }
 
   async transferWeth (target: string, ether: string): Promise<void> {
-    // const userOp = await this.accountApi.createSignedUserOp({
-    //   target,
-    //   data
-    // })
-    // console.log(userOp)
-
-    // try {
-    //   const userOpHash = await this.bundlerProvider.sendUserOpToBundler(userOp)
-    //   const txid = await this.accountApi.getUserOpReceipt(userOpHash)
-    //   console.log('reqId', userOpHash, 'txid=', txid)
-    // } catch (e: any) {
-    //   throw parseExpectedGas(e)
-    // }
     const wethAA = WETH__factory.connect(WETH, this.aaProvider.getSigner())
     await wethAA.transfer(target, parseEther(ether))
   }
