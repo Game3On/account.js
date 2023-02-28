@@ -4,14 +4,17 @@ import { DeployFunction } from 'hardhat-deploy/types'
 import { ethers } from 'hardhat'
 import { DeterministicDeployer } from '@accountjs/sdk'
 import {
-  EntryPoint__factory, SimpleAccountFactory__factory, SimpleAccountForTokensFactory__factory, WETH__factory, USDToken__factory, ERC20__factory,
-  WETHPaymaster__factory, USDPaymaster__factory, VerifyingPaymaster__factory, FixedPaymaster__factory
+  EntryPoint__factory, SimpleAccountFactory__factory, SimpleAccountForTokensFactory__factory, VerifyingPaymaster__factory
 } from '@accountjs/contracts'
+import {
+  WETH__factory, USDToken__factory, ERC20__factory,
+  WETHPaymaster__factory, USDPaymaster__factory, FixedPaymaster__factory
+} from '../src/types'
 
 // deploy entrypoint - but only on debug network..
 const deployEP: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const dep = new DeterministicDeployer(ethers.provider)
-  const epAddr = await dep.getDeterministicDeployAddress(EntryPoint__factory.bytecode)
+  const epAddr = await DeterministicDeployer.getAddress(EntryPoint__factory.bytecode)
   if (await dep.isContractDeployed(epAddr)) {
     console.log('EntryPoint already deployed at', epAddr)
     return
