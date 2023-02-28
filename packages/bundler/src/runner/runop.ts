@@ -12,11 +12,11 @@ import { formatEther, keccak256, parseEther } from 'ethers/lib/utils'
 import { Command } from 'commander'
 import { erc4337RuntimeVersion } from '@account-abstraction/utils'
 import fs from 'fs'
-import { DeterministicDeployer, HttpRpcClient, SimpleAccountAPI } from '@account-abstraction/sdk'
+import { DeterministicDeployer, HttpRpcClient, SimpleAccountAPI } from '@accountjs/sdk'
 import { runBundler } from '../runBundler'
 import { BundlerServer } from '../BundlerServer'
 
-const ENTRY_POINT = '0x1306b01bc3e4ad202612d3843387e94737673f53'
+const ENTRY_POINT = '0x0576a174d229e3cfa37253523e645a78a0c91b57'
 
 class Runner {
   bundlerProvider!: HttpRpcClient
