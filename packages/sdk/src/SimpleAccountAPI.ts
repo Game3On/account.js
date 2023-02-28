@@ -1,13 +1,15 @@
 import { BigNumber, BigNumberish } from 'ethers'
 import {
   SimpleAccount,
-  SimpleAccount__factory, SimpleAccountFactory,
+  SimpleAccount__factory,
+  SimpleAccountFactory,
   SimpleAccountFactory__factory
 } from '@aa-lib/contracts'
 
 import { arrayify, hexConcat } from 'ethers/lib/utils'
 import { Signer } from '@ethersproject/abstract-signer'
 import { BaseApiParams, BaseAccountAPI } from './BaseAccountAPI'
+import { TransactionRequest } from '@ethersproject/providers'
 
 /**
  * constructor params, added no top of base params:
@@ -19,7 +21,6 @@ export interface SimpleAccountApiParams extends BaseApiParams {
   owner: Signer
   factoryAddress?: string
   index?: number
-
 }
 
 /**
@@ -51,9 +52,33 @@ export class SimpleAccountAPI extends BaseAccountAPI {
 
   async _getAccountContract (): Promise<SimpleAccount> {
     if (this.accountContract == null) {
-      this.accountContract = SimpleAccount__factory.connect(await this.getAccountAddress(), this.provider)
+      this.accountContract = SimpleAccount__factory.connect(
+        await this.getAccountAddress(),
+        this.provider
+      )
     }
     return this.accountContract
+  }
+
+  async getBatchExecutionTransaction (
+    txs: TransactionRequest[]
+  ): Promise<TransactionRequest> {
+    const walletContract = await this._getAccountContract()
+    const destinations = txs.map((tx) => tx.to ?? '')
+    const values = txs.map((tx) =>
+      BigNumber.from(tx.value ?? 0)
+    )
+    const callDatas = txs.map((tx) => tx.data ?? '0x0')
+    const finalCallData = walletContract.interface.encodeFunctionData(
+      'executeBatch',
+      [destinations, values, callDatas]
+    )
+    const target = await this.getAccountAddress()
+    return {
+      to: target,
+      data: finalCallData,
+      from: target
+    }
   }
 
   /**
@@ -63,14 +88,20 @@ export class SimpleAccountAPI extends BaseAccountAPI {
   async getAccountInitCode (): Promise<string> {
     if (this.factory == null) {
       if (this.factoryAddress != null && this.factoryAddress !== '') {
-        this.factory = SimpleAccountFactory__factory.connect(this.factoryAddress, this.provider)
+        this.factory = SimpleAccountFactory__factory.connect(
+          this.factoryAddress,
+          this.provider
+        )
       } else {
         throw new Error('no factory to get initCode')
       }
     }
     return hexConcat([
       this.factory.address,
-      this.factory.interface.encodeFunctionData('createAccount', [await this.owner.getAddress(), this.index])
+      this.factory.interface.encodeFunctionData('createAccount', [
+        await this.owner.getAddress(),
+        this.index
+      ])
     ])
   }
 
@@ -88,17 +119,17 @@ export class SimpleAccountAPI extends BaseAccountAPI {
    * @param value
    * @param data
    */
-  async encodeExecute (target: string, value: BigNumberish, data: string): Promise<string> {
+  async encodeExecute (
+    target: string,
+    value: BigNumberish,
+    data: string
+  ): Promise<string> {
     const accountContract = await this._getAccountContract()
-    console.log('target', target, 'value', value, 'data', data)
-
-    return accountContract.interface.encodeFunctionData(
-      'execute',
-      [
-        target,
-        value,
-        data
-      ])
+    return accountContract.interface.encodeFunctionData('execute', [
+      target,
+      value,
+      data
+    ])
   }
 
   async signUserOpHash (userOpHash: string): Promise<string> {
