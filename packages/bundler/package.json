@@ -8,7 +8,7 @@
     "README.md"
   ],
   "scripts": {
-    "runop": "ts-node ./src/runner/runopro.ts",
+    "runop": "ts-node ./src/runner/runop.ts",
     "runopweth": "ts-node ./src/runner/runopweth.ts",
     "runopusdt": "ts-node ./src/runner/runopusdt.ts",
     "runopfixed": "ts-node ./src/runner/runopfixed.ts",

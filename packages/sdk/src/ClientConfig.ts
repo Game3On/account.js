@@ -1,4 +1,4 @@
-import { PaymasterAPI } from './PaymasterAPI'
+import { BasePaymasterAPI } from './BasePaymasterAPI'
 
 /**
  * configuration params for wrapProvider
@@ -19,7 +19,11 @@ export interface ClientConfig {
    */
   walletAddres?: string
   /**
+   * if set, use this pre-deployed factory.
+   */
+  accountFacotry?: string
+  /**
    * if set, call just before signing.
    */
-  paymasterAPI?: PaymasterAPI
+  paymasterAPI?: BasePaymasterAPI
 }

@@ -5,7 +5,7 @@ pragma solidity ^0.8.12;
 
 // no owner
 import "./IERC20.sol";
-contract ERC20 is IERC20 {
+contract Token is IERC20 {
 
     mapping(address => uint256) public override balanceOf;
 

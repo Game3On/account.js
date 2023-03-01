@@ -7,7 +7,7 @@ import {
   EntryPoint__factory, SimpleAccountFactory__factory, SimpleAccountForTokensFactory__factory, VerifyingPaymaster__factory
 } from '@accountjs/contracts'
 import {
-  WETH__factory, USDToken__factory, ERC20__factory,
+  WETH__factory, USDToken__factory, Token__factory,
   WETHPaymaster__factory, USDPaymaster__factory, FixedPaymaster__factory
 } from '../src/types'
 
@@ -60,11 +60,11 @@ const deployEP: DeployFunction = async function (hre: HardhatRuntimeEnvironment)
   console.log('Deployed VerifiedPaymaster at', verifiedPaymaster.address)
 
   // deploy erc20
-  const erc20Addr = await dep.deterministicDeploy(new ERC20__factory(), 0, ['TestToken', 'TT'])
-  console.log('Deployed custom ERC20 at', erc20Addr)
+  const tokenAddr = await dep.deterministicDeploy(new Token__factory(), 0, ['TestToken', 'TT'])
+  console.log('Deployed custom Token at', tokenAddr)
 
   // 4. fixed create and tx fee paymaster
-  const fixedPaymaster = await new FixedPaymaster__factory(ethers.provider.getSigner()).deploy(acctokFactory, epAddr, erc20Addr, parseEther('1'), parseEther('10'))
+  const fixedPaymaster = await new FixedPaymaster__factory(ethers.provider.getSigner()).deploy(acctokFactory, epAddr, tokenAddr, parseEther('1'), parseEther('10'))
   console.log('Deployed FixedPaymaster at', fixedPaymaster.address)
 }
 
